@@ -17,20 +17,20 @@
 # along with this software; see the file COPYING.  If not, write to
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
-# 
+#
 
 from gnuradio import uhd
 
 def crimson_source_c(channels, samp_rate, center_freq, gain):
     """
+    Connects to the crimson and returns a complex source object.
     """
     source = uhd.usrp_source(
         uhd.device_addr_t(""),
         uhd.stream_args(
             cpu_format = "fc32",
             otw_format = "sc16",
-            channels = channels),
-        False)
+            channels = channels), False)
     source.set_samp_rate(samp_rate)
     source.set_center_freq(center_freq)
     source.set_gain(gain)

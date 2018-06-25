@@ -17,11 +17,22 @@
 # along with this software; see the file COPYING.  If not, write to
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
-# 
+#
 
 from gnuradio import uhd
 
-class crimson_sink_c():
+def crimson_sink_c(channels, samp_rate, center_freq, gain):
     """
+    Connects to the crimson and returns a complex sink object.
     """
-    pass
+    sink = uhd.usrp_sink(
+        uhd.device_addr_t(""),
+        uhd.stream_args(
+            cpu_format = "fc32",
+            otw_format = "sc16",
+            channels = channels), "")
+    sink.set_samp_rate(samp_rate)
+    sink.set_center_freq(center_freq)
+    sink.set_gain(gain)
+    sink.set_time_now(uhd.time_spec_t(0.0))
+    return sink

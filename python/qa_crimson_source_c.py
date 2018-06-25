@@ -17,6 +17,7 @@
 # along with this software; see the file COPYING.  If not, write to
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
+#
 
 from gnuradio import gr
 from gnuradio import gr_unittest
@@ -76,7 +77,7 @@ class qa_crimson_source_c(gr_unittest.TestCase):
         self.tb.stop()
 
         # Dump.
-        util.dump(vsnk_c, channels, sc.num_samps)
+        util.dump(vsnk_c)
 
         # Verify.
         for channel in channels:
