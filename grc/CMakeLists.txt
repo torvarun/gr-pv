@@ -18,6 +18,6 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    pv_crimson_sink_c.xml
+    pv_crimson_sink_s.xml
     pv_crimson_source_c.xml DESTINATION share/gnuradio/grc/blocks
 )

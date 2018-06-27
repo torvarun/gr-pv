@@ -21,18 +21,22 @@
 
 from gnuradio import uhd
 
-def crimson_source_c(channels, samp_rate, center_freq, gain):
+def crimson_source_c(channels, sample_rate, center_freq, gain):
     """
     Connects to the crimson and returns a complex source object.
     """
-    source = uhd.usrp_source(
-        uhd.device_addr_t(""),
-        uhd.stream_args(
-            cpu_format = "fc32",
-            otw_format = "sc16",
-            channels = channels), False)
-    source.set_samp_rate(samp_rate)
-    source.set_center_freq(center_freq)
-    source.set_gain(gain)
-    source.set_time_now(uhd.time_spec_t(0.0))
-    return source
+
+    usrp_source = uhd.usrp_source(
+        "crimson", 
+        uhd.stream_args(cpu_format="fc32", otw_format="sc16", channels=channels), False)
+
+    usrp_source.set_samp_rate(sample_rate)
+    usrp_source.set_clock_source("internal")
+
+    for channel in channels:
+        usrp_source.set_center_freq(center_freq, channel)
+        usrp_source.set_gain(gain, channel)
+
+    usrp_source.set_time_now(uhd.time_spec_t(0.0))
+
+    return usrp_source

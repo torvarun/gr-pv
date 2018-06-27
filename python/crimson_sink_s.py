@@ -19,16 +19,25 @@
 # Boston, MA 02110-1301, USA.
 #
 
-from sys import stdout
+from gnuradio import uhd
 
-def dump(vsnk_c):
+def crimson_sink_s(channels, sample_rate, center_freq, gain):
     """
-    Prints complex data columns side by side for a Complex Vector Sink (vsnk_c).
+    Connects to the crimson and returns a sink object expecting interleaved
+    shorts of complex data.
     """
-    channels = range(len(vsnk_c))
-    samples = range(len(vsnk_c[0].data()))
-    for s in samples: 
-        for c in channels:
-            sample = vsnk_c[c].data()[s]
-            stdout.write("%10.5f %10.5f\t" % (sample.real, sample.imag))
-        stdout.write("\n")
+
+    usrp_sink = uhd.usrp_sink(
+        "crimson",
+        uhd.stream_args(cpu_format="sc16", otw_format="sc16", channels=channels))   
+
+    usrp_sink.set_samp_rate(sample_rate)
+    usrp_sink.set_clock_source("internal")
+
+    for channel in channels:
+        usrp_sink.set_center_freq(center_freq, channel)
+        usrp_sink.set_gain(gain, channel)
+
+    usrp_sink.set_time_now(uhd.time_spec_t(0.0))
+
+    return usrp_sink

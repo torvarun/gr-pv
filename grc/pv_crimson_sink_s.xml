@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <block>
-  <name>crimson_sink_c</name>
-  <key>pv_crimson_sink_c</key>
+  <name>crimson_sink_s</name>
+  <key>pv_crimson_sink_s</key>
   <category>[pv]</category>
   <import>import pv</import>
-  <make>pv.crimson_sink_c()</make>
+  <make>pv.crimson_sink_s()</make>
   <!-- Make one 'param' node for every Parameter you want settable from the GUI.
        Sub-nodes:
        * name
