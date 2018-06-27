@@ -36,16 +36,16 @@ class qa_crimson_sink_s(gr_unittest.TestCase):
 
     def test_000_t(self):
         """
-            Test Type:
-                Manual.
+        Test Type:
+            Manual.
 
-            Procedure:
-                1. Hook up an oscilloscope to the TX channels.
-                2. Ensure the signal is a clean sine wave.
+        Procedure:
+            1. Hook up an oscilloscope to the TX channels.
+            2. Ensure the signal is a clean sine wave.
 
-            Hints:
-                1. Signal amplitude varies with channel.
-                2. Use spectrum analyzer if you are unsure of signal integerity.
+        Hints:
+            1. Signal amplitude varies with channel.
+            2. Use spectrum analyzer if you are unsure of signal integerity.
         """
 
         # Variables.

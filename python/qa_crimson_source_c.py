@@ -44,20 +44,20 @@ class qa_crimson_source_c(gr_unittest.TestCase):
 
     def test_001_t(self):
         """
-            Test Type:
-                Manual.
+        Test Type:
+            Manual.
 
-            Procedure:
-                1. Hook up a signal generator to the RX channels.
-                2. Generate a 1MHz sine wave.
-                3. Receive and print the signal to stdout. Plot it.
-                4. Ensure the signal is clean.
-                5. Ensure the number of collected samples matches the
-                   the specified number of samples (this part is automatic).
+        Procedure:
+            1. Hook up a signal generator to the RX channels.
+            2. Generate a 1MHz sine wave.
+            3. Receive and print the signal to stdout. Plot it.
+            4. Ensure the signal is clean.
+            5. Ensure the number of collected samples matches the
+               the specified number of samples (this part is automatic).
 
-            Hints:
-                1. Run this test from the build folder.
-                   Using `make test` will pipe stdout to /dev/null.
+        Hints:
+            1. Run this test from the build folder.
+               Using `make test` will pipe stdout to /dev/null.
         """
 
         # Variables.
