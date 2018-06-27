@@ -38,7 +38,7 @@ class qa_crimson_source_c(gr_unittest.TestCase):
 
     def test_001_t(self):
 
-        # Test parameters.
+        """ Test Parameters """
         channels = [0, 1, 2, 3]
         samp_rate = 20e6
         center_freq = 15e6
@@ -47,11 +47,7 @@ class qa_crimson_source_c(gr_unittest.TestCase):
         sc.num_samps = 512
         sc.stream_now = True
 
-        # Blocks.
-        csrc_c = crimson_source_c(channels, samp_rate, center_freq, gain)
-        vsnk_c = [blocks.vector_sink_c() for sink in channels]
-
-        # Connections.
+        """ Blocks and Connections """
         # +----------+       +-----------+
         # |       ch0|------>| vsnk_c[0] |
         # |          |       +-----------+
@@ -67,19 +63,26 @@ class qa_crimson_source_c(gr_unittest.TestCase):
         # |          |       +-----------+
         # |       ch3|------>| vsnk_c[3] |
         # +----------+       +-----------+
+
+        # Crimson Source (Complex). 
+        csrc_c = crimson_source_c(channels, samp_rate, center_freq, gain)
+
+        # Vector Sink (Complex). 
+        vsnk_c = [blocks.vector_sink_c() for sink in channels]
+
+        # Connect.
         for channel in channels:
             self.tb.connect((csrc_c, channel), vsnk_c[channel])
 
-        # Run.
+        """ Run """
         csrc_c.issue_stream_cmd(sc)
         self.tb.start()
         sleep(5.0)
         self.tb.stop()
 
-        # Dump.
+        """ Verify """
         util.dump(vsnk_c)
 
-        # Verify.
         for channel in channels:
             self.assertEqual(len(vsnk_c[channel].data()), sc.num_samps)
 

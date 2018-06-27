@@ -35,4 +35,5 @@ def crimson_sink_c(channels, samp_rate, center_freq, gain):
     sink.set_center_freq(center_freq)
     sink.set_gain(gain)
     sink.set_time_now(uhd.time_spec_t(0.0))
+    sink.set_start_time(uhd.time_spec_t(1.0))
     return sink
