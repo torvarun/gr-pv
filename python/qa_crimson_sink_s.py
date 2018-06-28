@@ -46,6 +46,22 @@ class qa_crimson_sink_s(gr_unittest.TestCase):
         Hints:
             1. Signal amplitude varies with channel.
             2. Use spectrum analyzer if you are unsure of signal integerity.
+
+        Flow Diagram:
+                                        +-----------+        
+            +--------+    +--------+    |           |
+            | sig[0] |--->| c2s[0] |--->|ch0        |
+            +--------+    +--------+    |           |
+            +--------+    +--------+    |           |
+            | sig[1] |--->| c2s[1] |--->|ch1        |    
+            +--------+    +--------+    |           |
+            +--------+    +--------+    |           |
+            | sig[2] |--->| c2s[2] |--->|ch2        |
+            +--------+    +--------+    |           |
+            +--------+    +--------+    |           |
+            | sig[3] |--->| c2s[3] |--->|ch3        | 
+            +--------+    +--------+    |      csnk |
+                                        +-----------+
         """
 
         # Variables.

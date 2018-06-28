@@ -22,8 +22,10 @@ from gnuradio import gr_unittest
 from gnuradio import uhd
 from gnuradio import blocks
 from crimson_source_c import crimson_source_c
+
 import time
 import sys
+import util
 
 class qa_crimson_source_c(gr_unittest.TestCase):
 
@@ -32,15 +34,6 @@ class qa_crimson_source_c(gr_unittest.TestCase):
 
     def tearDown(self):
         self.tb = None
-
-    def dump(self, vsnk):
-        channels = range(len(vsnk))
-        samples = range(len(vsnk[0].data()))
-        for s in samples: 
-            for c in channels:
-                sample = vsnk[c].data()[s]
-                sys.stdout.write("%10.5f %10.5f\t" % (sample.real, sample.imag))
-            sys.stdout.write("\n")
 
     def test_001_t(self):
         """
@@ -58,11 +51,27 @@ class qa_crimson_source_c(gr_unittest.TestCase):
         Hints:
             1. Run this test from the build folder.
                Using `make test` will pipe stdout to /dev/null.
+
+        Flow Diagram:
+            +-----------+
+            |           |    +---------+
+            |        ch0|--->| vsnk[0] |
+            |           |    +---------+
+            |           |    +---------+
+            |        ch1|--->| vsnk[1] |    
+            |           |    +---------+
+            |           |    +---------+
+            |        ch2|--->| vsnk[2] |
+            |           |    +---------+
+            |           |    +---------+
+            |        ch3|--->| vsnk[3] | 
+            | csrc      |    +---------+
+            +-----------+
         """
 
         # Variables.
         channels = [0, 1, 2, 3]
-        samp_rate = 20e6
+        sample_rate = 20e6
         center_freq = 15e6
         gain = 1.0
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
@@ -70,7 +79,7 @@ class qa_crimson_source_c(gr_unittest.TestCase):
         sc.stream_now = True
 
         # Blocks.
-        csrc = crimson_source_c(channels, samp_rate, center_freq, gain)
+        csrc = crimson_source_c(channels, sample_rate, center_freq, gain)
 
         vsnk = [blocks.vector_sink_c() for channel in channels]
 
@@ -86,7 +95,7 @@ class qa_crimson_source_c(gr_unittest.TestCase):
         self.tb.wait()
 
         # Print.
-        self.dump(vsnk)
+        util.dump(vsnk)
 
         # Sample match check.
         for channel in channels:

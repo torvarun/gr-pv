@@ -32,7 +32,8 @@ GR_PYTHON_INSTALL(
     FILES
     __init__.py
     crimson_sink_s.py
-    crimson_source_c.py DESTINATION ${GR_PYTHON_DIR}/pv
+    crimson_source_c.py
+    DESTINATION ${GR_PYTHON_DIR}/pv
 )
 
 ########################################################################
@@ -44,3 +45,4 @@ set(GR_TEST_TARGET_DEPS gnuradio-pv)
 set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)
 GR_ADD_TEST(qa_crimson_sink_s ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_crimson_sink_s.py)
 GR_ADD_TEST(qa_crimson_source_c ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_crimson_source_c.py)
+GR_ADD_TEST(qa_crimson_loopback ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_crimson_loopback.py)
