@@ -42,14 +42,20 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_000_t(self):
         """
         Test Type:
-            Automatic.
+            Manual.
 
         Procedure:
+            1. Connect TX channels to corresponding RX channels
+               for all channels.
+            2. Verify that a sinewave is printed for all channels.
 
         Hints:
+            1. Be sure to use the attenuator on the RX else the RX channel
+               will be damaged with (potential) high TX channel gain.
+            2. Running `make test` will not print test output so run this
+               test individually to get printings.
 
         Flow Diagram:
-
             |<------------ TX CHAIN ---------->| |<----- RX CHAIN ---->|
                                         +------+ +------+
             +--------+    +--------+    |      | |      |    +---------+
