@@ -42,11 +42,10 @@ def dump(vsnk):
     Prints a vsnk in channel column layout in IQ format for all channels.
     """
 
-    samples = xrange(len(vsnk[0].data()))
-    channels = xrange(len(vsnk))
+    for sample in xrange(len(vsnk[0].data())):
+        for channel in xrange(len(vsnk)):
 
-    for sample in samples: 
-        for channel in channels:
             datum = vsnk[channel].data()[sample]
             sys.stdout.write("%10.5f %10.5f\t" % (datum.real, datum.imag))
+
         sys.stdout.write("\n")

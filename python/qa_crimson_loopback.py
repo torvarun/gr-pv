@@ -127,19 +127,37 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Read sigproc.py for further information on signal processing and vsnks.
         return vsnk
 
-    def test_000_t(self):
-        vsnk = self.coreTest(8.0, 2.0e4)
-        sigproc.dump(vsnk)
-
-    def test_001_t(self):
-        for rx_gain in [2.0, 4.0, 6.0, 8.0, 10.0]:
-            vsnk = self.coreTest(rx_gain, 2.0e4)
+    if True: # Change this flag from True to False to switch between debug and full testing.
+        """
+        Quick test for debugging.
+        """
+        def test_000_t(self):
+            vsnk = self.coreTest(8.0, 2.0e4)
             sigproc.dump(vsnk)
 
-    def test_002_t(self):
-        for tx_amp in [1.0e4, 1.5e4, 2.0e4, 2.5e4, 3.0e4]:
-            vsnk = self.coreTest(10.0, tx_amp)
-            sigproc.dump(vsnk)
+    else:
+        """
+        All tests with varying iterdata.
+        """
+        def test_001_t(self):
+            for rx_gain in [2.0, 4.0, 6.0, 8.0, 10.0]:
+                vsnk = self.coreTest(rx_gain, 2.0e4)
+                sigproc.dump(vsnk)
+    
+        def test_002_t(self):
+            for tx_amp in [1.0e4, 1.5e4, 2.0e4, 2.5e4, 3.0e4]:
+                vsnk = self.coreTest(10.0, tx_amp)
+                sigproc.dump(vsnk)
 
+        # Fill in these tests as time goes on.
+        def test_003_t(self):
+            pass
+
+        def test_004_t(self):
+            pass
+
+        def test_005_t(self):
+            pass
+    
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_loopback)
