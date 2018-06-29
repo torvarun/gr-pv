@@ -1,5 +1,3 @@
-# Out of Tree Module
-
 This is the pv-write-a-block package meant as a guide to building
 out-of-tree packages. To use the pv blocks, the Python namespaces
 is in 'pv', which is imported as:
