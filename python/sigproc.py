@@ -39,6 +39,22 @@ channels can be inferred by doing:
 """
 
 import sys
+import numpy
+import math
+
+def integrate(vsnk):
+    """
+    Integrates a vsnk.
+    """
+
+    integrals = []
+    for channel in xrange(len(vsnk)):
+        absolute = numpy.absolute(vsnk[channel].data())
+        integral = numpy.trapz(absolute)
+        magnitude = math.sqrt(integral.real ** 2 + integral.imag ** 2)
+        integrals.append(magnitude)
+
+    return integrals
 
 def dump(vsnk):
     """
@@ -46,9 +62,12 @@ def dump(vsnk):
     """
 
     for sample in xrange(len(vsnk[0].data())):
-        for channel in xrange(len(vsnk)):
 
+        for channel in xrange(len(vsnk)):
             datum = vsnk[channel].data()[sample]
             sys.stdout.write("%10.5f %10.5f\t" % (datum.real, datum.imag))
 
         sys.stdout.write("\n")
+
+    # For extra separation.
+    sys.stdout.write("\n")
