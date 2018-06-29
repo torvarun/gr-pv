@@ -32,6 +32,12 @@ processing, and verification. The test system, from a high level, transmits a si
 a corresponding RX channel using the GNURadio library. Data packet signal integrity is verified with the
 SciPy library. Once all tests pass the Crimson TNG is marked functional.
 
+# Directory Layout
+
+The Per Vices Functional Test System is built from GNURadio's Out of Tree Module generator.
+Currently no blocks are exported via XML to the GNURadio Companion; this out of tree module
+serves as a foundation for internal verification of Per Vice products.
+
 # Install
 
 ```
