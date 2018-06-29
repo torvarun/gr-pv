@@ -2,6 +2,13 @@
 
 This test system employs functional tests to verify the operation of Per Vices RX/TX devices.
 
+# Install
+
+mkdir build
+cd build
+cmake ..
+make test
+
 # Functional Tests
 
 Functional tests are marked qith a "qa" prefix.
