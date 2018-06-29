@@ -4,13 +4,15 @@ This test system employs functional tests to verify the operation of Per Vices R
 
 # Install
 
-`mkdir build
+```
+mkdir build
 
 cd build
 
 cmake ..
 
-make test`
+make test
+```
 
 # Functional Tests
 
