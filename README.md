@@ -2,18 +2,6 @@
 
 This test system employs functional tests to verify the operation of Per Vices RX/TX devices.
 
-# Install
-
-```
-mkdir build
-
-cd build
-
-cmake ..
-
-make test
-```
-
 # Functional Tests
 
 Functional tests are marked qith a "qa" prefix.
@@ -32,7 +20,7 @@ GNURadio for Python2 is installed before continuing.
 Additionally, automatic tests within the Per Vies Functional Test System employ
 SciPy for internal self verification. Ensure SciPy for Python2 is installed as well before continuing.
 
-Finally, said test system requires the Per Vices UHD driver to be installed.
+Finally, said test system requires the Per Vices UHD driver to be installed (see the Per Vices GitHub page).
 
 Ensure one BNC cable per channel is looped from its TX to RX channel. Ensure an attenuator is fixed to
 each RX line as driving a TX line with max gain will damage the RX line at max gain.
@@ -43,3 +31,15 @@ The Per Vices Functional Test System relies on TX/RX channel loop-backs for sign
 processing, and verification. The test system, from a high level, transmits a signal from a TX channel to
 a corresponding RX channel using the GNURadio library. Data packet signal integrity is verified with the
 SciPy library. Once all tests pass the Crimson TNG is marked functional.
+
+# Install
+
+```
+mkdir build
+
+cd build
+
+cmake ..
+
+make test
+```
