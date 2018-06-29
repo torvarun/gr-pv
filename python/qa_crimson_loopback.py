@@ -29,16 +29,16 @@ from crimson_source_c import crimson_source_c
 from crimson_sink_s import crimson_sink_s
 
 import time
-import util
+import sigproc
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
-    Procedure:
+    Manual Testing Procedure:
         1. Connect TX channels to corresponding RX channels
            for all channels.
         2. Verify that a sinewave is printed for all channels.
         3. Verify change in iteration parameters affects output.
-    
+
     Hints:
         1. Be sure to use the attenuator on the RX else the RX channel
            will be damaged with (potential) high TX channel gain.
@@ -49,18 +49,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     """
 
     def setUp(self):
-        """
-        Ignored.
-        """
-        pass
+        self.test_time = 5.0
 
     def tearDown(self):
-        """
-        Ignored.
-        """
         pass
 
-    def loopback(self, rx_gain, wave_amp):
+    def coreTest(self, rx_gain, tx_amp):
         """
         |<------------ TX CHAIN ---------->| |<----- RX CHAIN ---->|
                                     +------+ +------+
@@ -79,30 +73,30 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                                     +------+ +------+
         """
         tb = gr.top_block()
-        test_time = 5.0
 
-        # Variables to be tested.
-        channels = [0, 1, 2, 3]
+        # Variables.
+        channels = range(4)
         sample_rate = 20e6
         center_freq = 15e6
         wave_freq = 1e6
+
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
         sc.num_samps = 32
 
         # Blocks and Connections (TX CHAIN).
-        sig = [
-            analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, wave_amp, 0.0)
+        sigs = [
+            analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, tx_amp, 0.0)
             for channel in channels]
 
-        c2s = [
+        c2ss = [
             blocks.complex_to_interleaved_short(True)
             for channel in channels]
 
         csnk = crimson_sink_s(channels, sample_rate, center_freq, 0.0)
 
         for channel in channels:
-            tb.connect(sig[channel], c2s[channel])
-            tb.connect(c2s[channel], (csnk, channel))
+            tb.connect(sigs[channel], c2ss[channel])
+            tb.connect(c2ss[channel], (csnk, channel))
 
         # Blocks and Connections (RX CHAIN).
         csrc = crimson_source_c(channels, sample_rate, center_freq, rx_gain)
@@ -119,46 +113,33 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
         # Issue the stream command to start somewhere in the middle of the test.
         sc.stream_now = False
-        sc.time_spec = uhd.time_spec_t(test_time / 2.0)
+        sc.time_spec = uhd.time_spec_t(self.test_time / 2.0)
         csrc.issue_stream_cmd(sc)
 
         # Run the test.
         tb.start()
-        time.sleep(test_time)
+        time.sleep(self.test_time)
         tb.stop()
         tb.wait()
 
+        # Return a vsnk sample for further processing and verification.
+        # vsnk are to be processed in individual unit tests, eg. def test_xyz_t(self):
+        # Read sigproc.py for further information on signal processing and vsnks.
         return vsnk
 
     def test_000_t(self):
-        """
-        Tests RX gain.
-        """
-        for rx_gain in [2.0, 4.0, 6.0, 8.0, 10.0]:
-            vsnk = self.loopback(rx_gain, 2.0e4)
-            util.dump(vsnk)
+        vsnk = self.coreTest(8.0, 2.0e4)
+        sigproc.dump(vsnk)
 
     def test_001_t(self):
-        """
-        Tests wave amplitude.
-        """
-        for wave_amp in [1.0e4, 1.5e4, 2.0e4, 2.5e4, 3.0e4]:
-            vsnk = self.loopback(10.0, wave_amp)
-            util.dump(vsnk)
+        for rx_gain in [2.0, 4.0, 6.0, 8.0, 10.0]:
+            vsnk = self.coreTest(rx_gain, 2.0e4)
+            sigproc.dump(vsnk)
 
     def test_002_t(self):
-        pass
-
-    def test_003_t(self):
-        pass
-
-    def test_004_t(self):
-        pass
-
-    def test_005_t(self):
-        pass
-
-    # And so on...
+        for tx_amp in [1.0e4, 1.5e4, 2.0e4, 2.5e4, 3.0e4]:
+            vsnk = self.coreTest(10.0, tx_amp)
+            sigproc.dump(vsnk)
 
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_loopback)

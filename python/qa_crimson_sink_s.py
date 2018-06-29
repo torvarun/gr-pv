@@ -23,81 +23,83 @@ from gnuradio import gr
 from gnuradio import gr_unittest
 from gnuradio import blocks
 from gnuradio import analog
+
 from crimson_sink_s import crimson_sink_s
+
 import time
 
 class qa_crimson_sink_s(gr_unittest.TestCase):
+    """
+    Manual Testing Procedure:
+        1. Hook up an oscilloscope to the TX channels.
+        2. Ensure the signal is a clean sine wave.
+
+    Automatic Testing Procedure:
+        1. Ensure the Crimson Sink object can connect to the Crimson.
+           eg. Let the test pass on its own without doing the manual testing.
+
+    Hints:
+        1. Signal amplitude varies with channel.
+        2. Use spectrum analyzer if you are unsure of signal integerity.
+    """
 
     def setUp(self):
-        self.tb = gr.top_block()
+        self.test_time = 5.0
 
     def tearDown(self):
-        self.tb = None
+        pass
 
-    def test_000_t(self):
+    def coreTest(self):
         """
-        Test Type:
-            Manual.
-
-        Procedure:
-            1. Hook up an oscilloscope to the TX channels.
-            2. Ensure the signal is a clean sine wave.
-
-        Hints:
-            1. Signal amplitude varies with channel.
-            2. Use spectrum analyzer if you are unsure of signal integerity.
-
-        Flow Diagram:
-                                        +-----------+        
-            +--------+    +--------+    |           |
-            | sig[0] |--->| c2s[0] |--->|ch0        |
-            +--------+    +--------+    |           |
-            +--------+    +--------+    |           |
-            | sig[1] |--->| c2s[1] |--->|ch1        |    
-            +--------+    +--------+    |           |
-            +--------+    +--------+    |           |
-            | sig[2] |--->| c2s[2] |--->|ch2        |
-            +--------+    +--------+    |           |
-            +--------+    +--------+    |           |
-            | sig[3] |--->| c2s[3] |--->|ch3        | 
-            +--------+    +--------+    |      csnk |
-                                        +-----------+
+                                      +-----------+        
+        +---------+    +---------+    |           |
+        | sigs[0] |--->| c2ss[0] |--->|ch0        |
+        +---------+    +---------+    |           |
+        +---------+    +---------+    |           |
+        | sigs[1] |--->| c2ss[1] |--->|ch1        |    
+        +---------+    +---------+    |           |
+        +---------+    +---------+    |           |
+        | sigs[2] |--->| c2ss[2] |--->|ch2        |
+        +---------+    +---------+    |           |
+        +---------+    +---------+    |           |
+        | sigs[3] |--->| c2ss[3] |--->|ch3        | 
+        +---------+    +---------+    |      csnk |
+                                      +-----------+
         """
+        tb = gr.top_block()
 
         # Variables.
-        sample_rate = 52e6
+        channels = range(4)
+        sample_rate = 20e6
         center_freq = 15e6
-        channels = [0, 1, 2, 3]
-        gain = 0.0
 
         wave_freq = 1.0e6
         wave_ampl = [0.5e4, 1.0e4, 1.5e4, 2.0e4]
-        wave_complex_offset = 0
 
         # Blocks.
-        sig = [
-            analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE,
-                wave_freq,
-                wave_ampl[channel],
-                wave_complex_offset)
+        sigs = [
+            analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, wave_ampl[channel], 0.0)
             for channel in channels]
 
-        c2s = [
+        c2ss = [
             blocks.complex_to_interleaved_short(True)
             for channel in channels]
 
-        csnk = crimson_sink_s(channels, sample_rate, center_freq, gain)
+        csnk = crimson_sink_s(channels, sample_rate, center_freq, 0.0)
     
         # Connections.
         for channel in channels:
-            self.tb.connect(sig[channel], c2s[channel])
-            self.tb.connect(c2s[channel], (csnk, channel))
+            tb.connect(sigs[channel], c2ss[channel])
+            tb.connect(c2ss[channel], (csnk, channel))
 
         # Run.
-        self.tb.start()
-        time.sleep(5.0)
-        self.tb.stop()
-        self.tb.wait()
+        tb.start()
+        time.sleep(self.test_time)
+        tb.stop()
+        tb.wait()
+
+    def test_000_t(self):
+        self.coreTest()
 
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_sink_s)
