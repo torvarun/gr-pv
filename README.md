@@ -36,9 +36,12 @@ SciPy library. Once all tests pass the Crimson TNG is marked functional.
 
 The Per Vices Functional Test System is built from GNURadio's Out of Tree Module generator.
 Currently no blocks are exported via XML to the GNURadio Companion; this out of tree module
-serves as a foundation for internal verification of Per Vice products.
+serves as a foundation for internal verification of Per Vices products.
 
 # Install
+
+CMake is required for building GR-PV.
+Once the GR-PV repo is cloned, build and run all the functional tests:
 
 ```
 mkdir build
