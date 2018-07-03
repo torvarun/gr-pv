@@ -32,6 +32,11 @@ import time
 import sigproc
 import sys
 import numpy
+import logging
+
+# Use this logger for everything related to stdout prints.
+logging.basicConfig(level = logging.INFO)
+log = logging.getLogger(__name__)
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -48,14 +53,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
            test individually to get printings.
         3. Only one connector and attenuator may be available. If so,
            manually test each channel one after another.
+
+    Issue 4698.
     """
-
-    def setUp(self):
-        self.test_time = 5.0
-        self.channels = range(1)
-
-    def tearDown(self):
-        pass
 
     def coreTest(self, rx_gain, tx_amp, center_freq):
         """
@@ -80,6 +80,8 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Variables.
         sample_rate = 20e6
         wave_freq = 1e6
+        test_time = 5.0
+        channels = range(1)
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
         sc.num_samps = 32
@@ -87,25 +89,25 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Blocks and Connections (TX CHAIN).
         sigs = [
             analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, tx_amp, 0.0)
-            for channel in self.channels]
+            for channel in channels]
 
         c2ss = [
             blocks.complex_to_interleaved_short(True)
-            for channel in self.channels]
+            for channel in channels]
 
-        csnk = crimson_sink_s(self.channels, sample_rate, center_freq, 0.0)
+        csnk = crimson_sink_s(channels, sample_rate, center_freq, 0.0)
 
-        for channel in self.channels:
+        for channel in channels:
             tb.connect(sigs[channel], c2ss[channel])
             tb.connect(c2ss[channel], (csnk, channel))
 
         # Blocks and Connections (RX CHAIN).
-        csrc = crimson_source_c(self.channels, sample_rate, center_freq, rx_gain)
+        csrc = crimson_source_c(channels, sample_rate, center_freq, rx_gain)
 
         vsnk = [blocks.vector_sink_c()
-            for channel in self.channels]
+            for channel in channels]
 
-        for channel in self.channels:
+        for channel in channels:
             tb.connect((csrc, channel), vsnk[channel])
 
         # Reset TX and RX times to be roughly in sync.
@@ -114,12 +116,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
         # Issue the stream command to start somewhere in the middle of the test.
         sc.stream_now = False
-        sc.time_spec = uhd.time_spec_t(self.test_time / 2.0)
+        sc.time_spec = uhd.time_spec_t(test_time / 2.0)
         csrc.issue_stream_cmd(sc)
 
         # Run the test.
         tb.start()
-        time.sleep(self.test_time)
+        time.sleep(test_time)
         tb.stop()
         tb.wait()
 
@@ -141,13 +143,11 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Ramps up TX signal amplitude
             """
 
-            for center_freq in [15e6, 30e6, 45e6, 60e6]:
-
+            for center_freq in [15e6, 30e6, 45e6, 60e6, 75e6, 90e6]:
                 areas = []
+                for tx_amp in [1.0e4, 1.5e4, 2.0e4, 2.5e4, 3.0e4]:
 
-                for tx_amp in [1.0e4, 1.5e4, 2.0e4]:
-
-                    print "center freq %f: tx_amp %f" % (center_freq, tx_amp)
+                    log.info("center freq %f: tx_amp %f" % (center_freq, tx_amp))
 
                     # Get a vsnk.
                     vsnk = self.coreTest(10.0, tx_amp, center_freq)
@@ -165,6 +165,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 # With each ramp, assert that average absolute voltage numbers increases.
                 # A quick way to do this is just to check if the list is sorted.
                 for ramp in ramps:
+                    log.info(ramp)
                     self.assertEqual(ramp, sorted(ramp))
     
         def test_002_t(self):
