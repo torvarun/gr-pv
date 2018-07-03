@@ -31,6 +31,7 @@ from crimson_sink_s import crimson_sink_s
 import time
 import sigproc
 import sys
+import numpy
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -51,11 +52,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     def setUp(self):
         self.test_time = 5.0
+        self.channels = range(1)
 
     def tearDown(self):
         pass
 
-    def coreTest(self, rx_gain, tx_amp):
+    def coreTest(self, rx_gain, tx_amp, center_freq):
         """
         |<------------ TX CHAIN ---------->| |<----- RX CHAIN ---->|
                                     +------+ +------+
@@ -76,9 +78,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         tb = gr.top_block()
 
         # Variables.
-        channels = range(4)
         sample_rate = 20e6
-        center_freq = 15e6
         wave_freq = 1e6
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
@@ -87,25 +87,25 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Blocks and Connections (TX CHAIN).
         sigs = [
             analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, tx_amp, 0.0)
-            for channel in channels]
+            for channel in self.channels]
 
         c2ss = [
             blocks.complex_to_interleaved_short(True)
-            for channel in channels]
+            for channel in self.channels]
 
-        csnk = crimson_sink_s(channels, sample_rate, center_freq, 0.0)
+        csnk = crimson_sink_s(self.channels, sample_rate, center_freq, 0.0)
 
-        for channel in channels:
+        for channel in self.channels:
             tb.connect(sigs[channel], c2ss[channel])
             tb.connect(c2ss[channel], (csnk, channel))
 
         # Blocks and Connections (RX CHAIN).
-        csrc = crimson_source_c(channels, sample_rate, center_freq, rx_gain)
+        csrc = crimson_source_c(self.channels, sample_rate, center_freq, rx_gain)
 
         vsnk = [blocks.vector_sink_c()
-            for channel in channels]
+            for channel in self.channels]
 
-        for channel in channels:
+        for channel in self.channels:
             tb.connect((csrc, channel), vsnk[channel])
 
         # Reset TX and RX times to be roughly in sync.
@@ -128,34 +128,50 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Read sigproc.py for further information on signal processing and vsnks.
         return vsnk
 
-    if True: # Change this flag from True to False to switch between debug and full testing.
-        """
-        Quick test for debugging.
-        """
+    # Quick Debug Testing.
+    if False:
         def test_000_t(self):
+            vsnk = self.coreTest(8.0, 3.0e4, 15e6)
+            sigproc.dump(vsnk)
 
-            for tx_amp in [1.0e4, 1.5e4, 2.0e4, 2.5e4, 3.0e4]:
-                vsnk = self.coreTest(8.0, tx_amp)
-    
-                # Process.
-                integrals = sigproc.integrate(vsnk)
-
-                for integral in integrals:
-                    sys.stdout.write("%10.5f" % integral)
-                sys.stdout.write("\n")
-
-                sigproc.dump(vsnk)
+    # Full Testing.
     else:
-        """
-        All tests with varying iterdata.
-        """
         def test_001_t(self):
-            pass
+            """
+            Ramps up TX signal amplitude
+            """
+
+            for center_freq in [15e6, 30e6, 45e6, 60e6]:
+
+                areas = []
+
+                for tx_amp in [1.0e4, 1.5e4, 2.0e4]:
+
+                    print "center freq %f: tx_amp %f" % (center_freq, tx_amp)
+
+                    # Get a vsnk.
+                    vsnk = self.coreTest(10.0, tx_amp, center_freq)
+
+                    # Process vsnk and get an area list.
+                    # An area list contains one average absolute voltage per channel.
+                    area = sigproc.absolute_area(vsnk)
+
+                    # Append for later processing.
+                    areas.append(area)
+
+                # A list of area lists needs to be tranposed to group up channel data.
+                ramps = numpy.array(areas).T.tolist()
+
+                # With each ramp, assert that average absolute voltage numbers increases.
+                # A quick way to do this is just to check if the list is sorted.
+                for ramp in ramps:
+                    self.assertEqual(ramp, sorted(ramp))
     
         def test_002_t(self):
             pass
 
         def test_003_t(self):
+            # Phase coherancy high priority.
             pass
 
         def test_004_t(self):

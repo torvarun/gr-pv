@@ -20,53 +20,54 @@
 #
 
 """
-sigproc (Signal Processor) performs operations on vsnks (Vector Sinks).
+ ____  __  ___  ____  ____   __    ___
+/ ___)(  )/ __)(  _ \(  _ \ /  \  / __)
+\___ \ )(( (_ \ ) __/ )   /(  O )( (__
+(____/(__)\___/(__)  (__\_) \__/  \___)
 
-vsnks contain channel data in complex format.
-To access a vsnk's channel data:
-    vsnk[channel].data()
+SigProc (Signal Processor) performs operations on vsnks (Vector Sinks).
 
-To access a specific sample:
-    vsnk[channel].data()[sample].
+vsnk layout:
 
-The value `sample` must be within the number of samples of the channel.
-To determine the number of samples of a channel:
-    xrange(len(vsnk[channel].data())
+     ch[0]   ch[0]   ...  ch[n]
+    -----------------------------
+     a + bi  a + bi  ...  a + bi             
+     a + bi  a + bi  ...  a + bi             
+     a + bi  a + bi  ...  a + bi             
+     a + bi  a + bi  ...  a + bi             
 
-Assume all channels have an equal sample size. The number of
-channels can be inferred by doing:
-    xrange(len(vsnk))
+Each channel column holds a complex number sample.
+
 """
 
 import sys
 import numpy
 import math
+from scipy import fftpack
 
-def integrate(vsnk):
+def absolute_area(vsnk):
     """
-    Integrates a vsnk.
+    Returns the aboslute area of a vsnk as the modulous of the complex number.
     """
-
-    integrals = []
+    areas = []
     for channel in xrange(len(vsnk)):
         absolute = numpy.absolute(vsnk[channel].data())
         integral = numpy.trapz(absolute)
-        magnitude = math.sqrt(integral.real ** 2 + integral.imag ** 2)
-        integrals.append(magnitude)
 
-    return integrals
+        # abs(complex) is complex modulous
+        areas.append(abs(integral))
+
+    return areas
 
 def dump(vsnk):
     """
     Prints a vsnk in channel column layout in IQ format for all channels.
     """
-
     for sample in xrange(len(vsnk[0].data())):
 
         for channel in xrange(len(vsnk)):
             datum = vsnk[channel].data()[sample]
             sys.stdout.write("%10.5f %10.5f\t" % (datum.real, datum.imag))
-
         sys.stdout.write("\n")
 
     # For extra separation.
