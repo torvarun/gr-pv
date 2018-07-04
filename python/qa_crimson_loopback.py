@@ -31,7 +31,7 @@ from crimson_sink_s import crimson_sink_s
 import time
 import sigproc
 import sys
-import numpy
+import numpy as np
 
 from log import log
 
@@ -165,7 +165,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             """
             pass
 
-        def test_004_t(self):
+        def test_005_t(self):
             """
             Set and Get.
             """
@@ -177,36 +177,43 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Subtask 4700.
             """
 
-            for center_freq in numpy.arange(140e6, 500e6, 20e6):
+            for center_freq in np.arange(140e6, 500e6, 15e6):
 
                 log.info("center freq %.2f Hz" % (center_freq))
 
                 areas = []
-                for tx_amp in numpy.arange(10e3, 30e3, 2.5e3):
+                for tx_amp in np.arange(10e3, 30e3, 5.0e3):
 
                     # High band requires stronger reception if center_freq > 120e6:
                     rx_gain = 30.0 if center_freq > 120e6 else 8.0
 
-                    # Get a vsnk.
                     vsnk = self.coreTest(rx_gain, tx_amp, center_freq)
 
-                    # Process vsnk and get an area list.
-                    # An area list contains one average absolute voltage per channel.
-                    area = sigproc.absolute_area(vsnk)
-
-                    # Append for later processing.
-                    areas.append(area)
-
-                    # Print the vsnk for later analysis just incase something goes wrong.
-                    sigproc.dump(vsnk)
+                    # An area list contains one absolute area per channel.
+                    areas.append(sigproc.absolute_area(vsnk))
 
                 # A list of area lists needs to be tranposed to group up channel data.
-                ramps = numpy.array(areas).T.tolist()
+                ramps = np.array(areas).T.tolist()
 
-                # With each ramp, assert that average absolute voltage numbers increases.
-                # A quick way to do this is just to check if the list is sorted.
+                # Check the difference in standard deviation against some gold standard.
+                stds = [np.std(np.subtract(ramp, ramps[0])) for ramp in ramps]
+
+                # Print all the ramps.
+                log.info("Ramps")
                 for ramp in ramps:
-                    log.info(ramp)
+                    log.info(np.around(ramp, decimals = 4))
+    
+                # Print all standard deviations.
+                log.info("Standard Deviations")
+                for std in stds:
+                    log.info(std)
+
+                # Verify standard deviation is not erratic.
+                for std in stds:
+                    self.assertTrue(std < 0.1)
+
+                # Verify ramps ramp upwards.
+                for ramp in ramps:
                     self.assertEqual(ramp, sorted(ramp))
     
 if __name__ == '__main__':
