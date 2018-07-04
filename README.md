@@ -1,4 +1,4 @@
-![](logo.png)
+![](pv.png)
 
 # Per Vices Functional Test System
 
