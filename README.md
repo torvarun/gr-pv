@@ -57,4 +57,6 @@ cmake ..
 make test
 ```
 
+In total testing will take approximately 10 hours.
+
 Once all functional tests pass the RX/TX device is ready for use.
