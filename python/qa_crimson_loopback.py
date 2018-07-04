@@ -32,11 +32,8 @@ import time
 import sigproc
 import sys
 import numpy
-import logging
 
-# Use this logger for everything related to stdout prints.
-logging.basicConfig(level = logging.INFO)
-log = logging.getLogger(__name__)
+from log import log
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -80,7 +77,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Variables.
         sample_rate = 20e6
         wave_freq = 1e6
-        test_time = 5.0
+        test_time = 6.0
         channels = range(1)
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
@@ -143,14 +140,18 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Ramps up TX signal amplitude
             """
 
-            for center_freq in [15e6, 30e6, 45e6, 60e6, 75e6, 90e6]:
-                areas = []
-                for tx_amp in [1.0e4, 1.5e4, 2.0e4, 2.5e4, 3.0e4]:
+            for center_freq in numpy.arange(20e6, 500e6, 20e6):
 
-                    log.info("center freq %f: tx_amp %f" % (center_freq, tx_amp))
+                areas = []
+                for tx_amp in numpy.arange(10e3, 30e3, 2.5e3):
+
+                    # High band requires stronger reception if center_freq > 120e6:
+                    rx_gain = 30.0 if center_freq > 120e6 else 8.0
+
+                    log.info("center freq %.2f: tx_amp %.2f: rx_gain %.2f" % (center_freq, tx_amp, rx_gain))
 
                     # Get a vsnk.
-                    vsnk = self.coreTest(10.0, tx_amp, center_freq)
+                    vsnk = self.coreTest(rx_gain, tx_amp, center_freq)
 
                     # Process vsnk and get an area list.
                     # An area list contains one average absolute voltage per channel.
