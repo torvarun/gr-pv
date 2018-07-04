@@ -37,19 +37,23 @@ from log import log
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
-    Manual Testing Procedure:
-        1. Connect TX channels to corresponding RX channels
-           for all channels.
-        2. Verify that a sinewave is printed for all channels.
-        3. Verify change in iteration parameters affects output.
-
     Hints:
         1. Be sure to use the attenuator on the RX else the RX channel
            will be damaged with (potential) high TX channel gain.
+
         2. Running `make test` will not print test output so run this
            test individually to get printings.
-        3. Only one connector and attenuator may be available. If so,
-           manually test each channel one after another.
+
+    Testing Requirements:
+
+        1. Channel Independence:
+            All settings must be able to be changed independently.
+
+        2. Channel to Channel Consistency:
+            All channels must behave the same.
+
+        3. Channel Repeatability:
+            Channels must behave the same across multiple runs.
 
     Issue 4698.
     """
@@ -78,10 +82,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         sample_rate = 20e6
         wave_freq = 1e6
         test_time = 6.0
-        channels = range(1)
+        channels = range(4)
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
-        sc.num_samps = 32
+        sc.num_samps = 64
 
         # Blocks and Connections (TX CHAIN).
         sigs = [
@@ -129,26 +133,59 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     # Quick Debug Testing.
     if False:
+
         def test_000_t(self):
             vsnk = self.coreTest(8.0, 3.0e4, 15e6)
             sigproc.dump(vsnk)
 
     # Full Testing.
     else:
+
         def test_001_t(self):
             """
-            Ramps up TX signal amplitude
+            Trigger.
+            """
+            pass
+
+        def test_002_t(self):
+            """
+            Flow Control.
+            """
+            pass
+
+        def test_003_t(self):
+            """
+            Phase Coherency.
+            """
+            pass
+
+        def test_004_t(self):
+            """
+            Start of Burst.
+            """
+            pass
+
+        def test_004_t(self):
+            """
+            Set and Get.
+            """
+            pass
+
+        def test_006_t(self):
+            """
+            Gain (Low and High Band).
+            Subtask 4700.
             """
 
-            for center_freq in numpy.arange(20e6, 500e6, 20e6):
+            for center_freq in numpy.arange(140e6, 500e6, 20e6):
+
+                log.info("center freq %.2f Hz" % (center_freq))
 
                 areas = []
                 for tx_amp in numpy.arange(10e3, 30e3, 2.5e3):
 
                     # High band requires stronger reception if center_freq > 120e6:
                     rx_gain = 30.0 if center_freq > 120e6 else 8.0
-
-                    log.info("center freq %.2f: tx_amp %.2f: rx_gain %.2f" % (center_freq, tx_amp, rx_gain))
 
                     # Get a vsnk.
                     vsnk = self.coreTest(rx_gain, tx_amp, center_freq)
@@ -160,6 +197,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                     # Append for later processing.
                     areas.append(area)
 
+                    # Print the vsnk for later analysis just incase something goes wrong.
+                    sigproc.dump(vsnk)
+
                 # A list of area lists needs to be tranposed to group up channel data.
                 ramps = numpy.array(areas).T.tolist()
 
@@ -168,19 +208,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 for ramp in ramps:
                     log.info(ramp)
                     self.assertEqual(ramp, sorted(ramp))
-    
-        def test_002_t(self):
-            pass
-
-        def test_003_t(self):
-            # Phase coherancy high priority.
-            pass
-
-        def test_004_t(self):
-            pass
-
-        def test_005_t(self):
-            pass
     
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_loopback)
