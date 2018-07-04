@@ -41,7 +41,8 @@ serves as a foundation for internal verification of Per Vices products.
 # Install
 
 CMake is required for building GR-PV.
-Once the GR-PV repo is cloned, build and run all the functional tests:
+
+Once the GR-PV repo is cloned, cd /to/the/folder and build and run all the functional tests:
 
 ```
 mkdir build
