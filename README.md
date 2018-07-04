@@ -8,9 +8,7 @@ This test system employs functional tests to verify the operation of Per Vices R
 
 Functional tests are marked qith a "qa" prefix.
 
-Functional tests may either be automatic or manual or in some cases both.
-
-Functional tests are composed of smaller iterative tests.
+Functional tests are automated with internal passing critiera.
 
 Each iteration of an iterative test is tested clean slate with a new connection to the RX/TX device.
 
@@ -22,7 +20,7 @@ GNURadio for Python2 is installed before continuing.
 Additionally, automatic tests within the Per Vies Functional Test System employ
 NumPy and SciPy for internal self verification. Ensure NumPy and SciPy for Python2 is installed before continuing.
 
-Finally, said test system requires the Per Vices UHD driver to be installed (see the Per Vices GitHub page).
+Finally, this test system requires the Per Vices UHD driver to be installed (see the Per Vices GitHub page).
 
 Ensure one BNC cable per channel is looped from its TX to RX channel. Ensure an attenuator is fixed to
 each RX line as driving a TX line with max gain will damage the RX line at max gain.
@@ -42,7 +40,7 @@ serves as a foundation for internal verification of Per Vices products.
 
 # Install
 
-CMake is required for building he Per Vices Functional Test System.
+CMake is required for building the Per Vices Functional Test System.
 Clone the repo, cd /to/the/folder, build, and run all the functional tests:
 
 ```
@@ -58,3 +56,5 @@ cmake ..
 
 make test
 ```
+
+Once all functional tests pass the RX/TX device is ready for use.
