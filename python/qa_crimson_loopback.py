@@ -67,6 +67,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # In seconds.
         self.test_time = 6.0
 
+        # Extra white space for test seperation.
+        print ""
+
     def coreTest(self, rx_gain, tx_amp, center_freq):
         """
         |<------------ TX CHAIN ---------->| |<----- RX CHAIN ---->|
@@ -185,7 +188,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Subtask 4700.
             """
 
-            for center_freq in np.arange(15e6, 2000e6, 15e6):
+            # For each center frequency, sweep the TX Gain.
+
+            for center_freq in np.arange(10e6, 4000e6, 20e6):
 
                 log.info("%.2f Hz" % center_freq)
 
@@ -195,7 +200,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 for tx_amp in np.arange(5e3, 35e3, 5.0e3):
 
                     vsnk = self.coreTest(
-                        # High band requires stronger reception when  center_freq is greater 120 Mhz.
+                        # High band requires stronger reception when center_freq is greater 120 Mhz.
                         30.0 if center_freq > 120e6 else 10.0,
                         tx_amp,
                         center_freq)
@@ -210,27 +215,27 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 areas = np.array(areas).T.tolist()
                 peaks = np.array(peaks).T.tolist()
 
-                # Standard deviations.
+                # Compute standard deviations.
                 stds = [np.std(area) for area in areas]
 
                 # Print.
                 log.info("Absolute Areas")
-                for area in areas:
-                    log.info(np.around(area, decimals = 4))
+                for ch, area in enumerate(areas):
+                    log.info("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
 
                 log.info("Channel Peaks")
-                for peak in peaks:
-                    log.info(np.around(peak, decimals = 4))
+                for ch, peak in enumerate(peaks):
+                    log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
     
                 log.info("Standard Deviations")
-                for std in stds:
-                    log.info(std)
+                for ch, std in enumerate(stds):
+                    log.info("ch[%d]: %r" % (ch, std))
 
                 # Verify standard deviations are roughly equal.
                 for std in stds:
                     self.assertTrue(abs(std - stds[0]) < 0.05)
 
-                # Verify areas are increasing.
+                # Verify areas are increasing (just check if list if sorted).
                 for area in areas:
                     self.assertEqual(area, sorted(area))
     
