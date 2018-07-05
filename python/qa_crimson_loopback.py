@@ -30,7 +30,6 @@ from crimson_sink_s import crimson_sink_s
 
 import time
 import sigproc
-import sys
 import numpy as np
 
 from log import log
@@ -58,6 +57,16 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     Issue 4698.
     """
 
+    def setUp(self):
+        """
+        Runs before every test is called.
+        """
+
+        self.channels = range(2)
+
+        # In seconds.
+        self.test_time = 6.0
+
     def coreTest(self, rx_gain, tx_amp, center_freq):
         """
         |<------------ TX CHAIN ---------->| |<----- RX CHAIN ---->|
@@ -76,13 +85,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         +--------+    +--------+    | csnk | | csrc |    +---------+
                                     +------+ +------+
         """
+
         tb = gr.top_block()
 
         # Variables.
         sample_rate = 20e6
         wave_freq = 1e6
-        test_time = 6.0
-        channels = range(2)
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
         sc.num_samps = 64
@@ -90,39 +98,39 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Blocks and Connections (TX CHAIN).
         sigs = [
             analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, tx_amp, 0.0)
-            for channel in channels]
+            for channel in self.channels]
 
         c2ss = [
             blocks.complex_to_interleaved_short(True)
-            for channel in channels]
+            for channel in self.channels]
 
-        csnk = crimson_sink_s(channels, sample_rate, center_freq, 0.0)
+        csnk = crimson_sink_s(self.channels, sample_rate, center_freq, 0.0)
 
-        for channel in channels:
+        for channel in self.channels:
             tb.connect(sigs[channel], c2ss[channel])
             tb.connect(c2ss[channel], (csnk, channel))
 
         # Blocks and Connections (RX CHAIN).
-        csrc = crimson_source_c(channels, sample_rate, center_freq, rx_gain)
+        csrc = crimson_source_c(self.channels, sample_rate, center_freq, rx_gain)
 
         vsnk = [blocks.vector_sink_c()
-            for channel in channels]
+            for channel in self.channels]
 
-        for channel in channels:
+        for channel in self.channels:
             tb.connect((csrc, channel), vsnk[channel])
 
         # Reset TX and RX times to be roughly in sync.
         csnk.set_time_now(uhd.time_spec_t(0.0))
         csrc.set_time_now(uhd.time_spec_t(0.0))
 
-        # Issue the stream command to start somewhere in the middle of the test.
+        # Issue stream command to start RX chain somewhere in the middle of the test.
         sc.stream_now = False
-        sc.time_spec = uhd.time_spec_t(test_time / 2.0)
+        sc.time_spec = uhd.time_spec_t(self.test_time / 2.0)
         csrc.issue_stream_cmd(sc)
 
         # Run the test.
         tb.start()
-        time.sleep(test_time)
+        time.sleep(self.test_time)
         tb.stop()
         tb.wait()
 
@@ -177,29 +185,42 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Subtask 4700.
             """
 
-            for center_freq in np.arange(1000e6, 2000e6, 15e6):
+            for center_freq in np.arange(15e6, 2000e6, 15e6):
 
-                log.info("center freq %.2f Hz" % center_freq)
+                log.info("%.2f Hz" % center_freq)
 
                 areas = []
-                for tx_amp in np.arange(10e3, 30e3, 5.0e3):
+                peaks = []
 
-                    # High band requires stronger reception
-                    # when center_freq is greater 120 Mhz.
-                    rx_gain = 30.0 if center_freq > 120e6 else 8.0
+                for tx_amp in np.arange(5e3, 35e3, 5.0e3):
 
-                    vsnk = self.coreTest(rx_gain, tx_amp, center_freq)
+                    vsnk = self.coreTest(
+                        # High band requires stronger reception when  center_freq is greater 120 Mhz.
+                        30.0 if center_freq > 120e6 else 10.0,
+                        tx_amp,
+                        center_freq)
 
-                    areas.append(sigproc.absolute_area(vsnk))
+                    area = sigproc.absolute_area(vsnk)
+                    peak = sigproc.channel_peaks(vsnk)
 
-                ramps = np.array(areas).T.tolist()
+                    areas.append(area)
+                    peaks.append(peak)
+    
+                # Transpose to defragment channel data.
+                areas = np.array(areas).T.tolist()
+                peaks = np.array(peaks).T.tolist()
 
-                stds = [np.std(ramp) for ramp in ramps]
+                # Standard deviations.
+                stds = [np.std(area) for area in areas]
 
                 # Print.
-                log.info("Ramps")
-                for ramp in ramps:
-                    log.info(np.around(ramp, decimals = 4))
+                log.info("Absolute Areas")
+                for area in areas:
+                    log.info(np.around(area, decimals = 4))
+
+                log.info("Channel Peaks")
+                for peak in peaks:
+                    log.info(np.around(peak, decimals = 4))
     
                 log.info("Standard Deviations")
                 for std in stds:
@@ -207,11 +228,11 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
                 # Verify standard deviations are roughly equal.
                 for std in stds:
-                    self.assertTrue(abs(std - stds[0]) < 0.075)
+                    self.assertTrue(abs(std - stds[0]) < 0.05)
 
-                # Verify ramps are increasing.
-                for ramp in ramps:
-                    self.assertEqual(ramp, sorted(ramp))
+                # Verify areas are increasing.
+                for area in areas:
+                    self.assertEqual(area, sorted(area))
     
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_loopback)

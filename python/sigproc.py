@@ -25,7 +25,24 @@
 \___ \ )(( (_ \ ) __/ )   /(  O )( (__
 (____/(__)\___/(__)  (__\_) \__/  \___)
 
-SigProc (Signal Processor) performs operations on vsnks (Vector Sinks).
+SigProc (Signal Processor) performs operations on vsnks (Vector Sinks)
+from the GNU Radio RX Chain.
+
+|<----- RX CHAIN ---->|
++------+
+|      |    +---------+
+|   ch0|--->| vsnk[0] |----+---->[SIGPROC]
+|      |    +---------+    |
+|      |    +---------+    |
+|   ch1|--->| vsnk[1] |----+
+|      |    +---------+    |
+|      |    +---------+    |
+|   ch2|--->| vsnk[2] |----+
+|      |    +---------+    |
+|      |    +---------+    |
+|   ch3|--->| vsnk[3] |----+
+| csrc |    +---------+
++------+
 
 vsnk layout:
 
@@ -41,18 +58,34 @@ Each channel column holds a complex number sample.
 """
 
 import sys
-import numpy
-import math
-from scipy import fftpack
+import numpy as np
+
+def channel_peaks(vsnk):
+    """
+    Returns one modulous peak per channel for a vsnk.
+    """
+
+    peaks = []
+    for channel in xrange(len(vsnk)):
+        freqs = np.fft.fft(vsnk[channel].data())
+
+        # Frequencies are complex. Make them modulous.
+        mods = [abs(freq) for freq in freqs]
+
+        peaks.append(max(mods))
+
+    return peaks
+
 
 def absolute_area(vsnk):
     """
     Returns the aboslute area of a vsnk as the modulous of the complex number.
     """
+
     areas = []
     for channel in xrange(len(vsnk)):
-        absolute = numpy.absolute(vsnk[channel].data())
-        integral = numpy.trapz(absolute)
+        absolute = np.absolute(vsnk[channel].data())
+        integral = np.trapz(absolute)
 
         # abs(complex) is complex modulous
         areas.append(abs(integral))
@@ -63,11 +96,13 @@ def dump(vsnk):
     """
     Prints a vsnk in channel column layout in IQ format for all channels.
     """
+
     for sample in xrange(len(vsnk[0].data())):
 
         for channel in xrange(len(vsnk)):
             datum = vsnk[channel].data()[sample]
             sys.stdout.write("%10.5f %10.5f\t" % (datum.real, datum.imag))
+
         sys.stdout.write("\n")
 
     # For extra separation.
