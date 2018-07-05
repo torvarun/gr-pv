@@ -82,7 +82,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         sample_rate = 20e6
         wave_freq = 1e6
         test_time = 6.0
-        channels = range(4)
+        channels = range(2)
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
         sc.num_samps = 64
@@ -177,42 +177,39 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Subtask 4700.
             """
 
-            for center_freq in np.arange(140e6, 500e6, 15e6):
+            for center_freq in np.arange(1000e6, 2000e6, 15e6):
 
-                log.info("center freq %.2f Hz" % (center_freq))
+                log.info("center freq %.2f Hz" % center_freq)
 
                 areas = []
                 for tx_amp in np.arange(10e3, 30e3, 5.0e3):
 
-                    # High band requires stronger reception if center_freq > 120e6:
+                    # High band requires stronger reception
+                    # when center_freq is greater 120 Mhz.
                     rx_gain = 30.0 if center_freq > 120e6 else 8.0
 
                     vsnk = self.coreTest(rx_gain, tx_amp, center_freq)
 
-                    # An area list contains one absolute area per channel.
                     areas.append(sigproc.absolute_area(vsnk))
 
-                # A list of area lists needs to be tranposed to group up channel data.
                 ramps = np.array(areas).T.tolist()
 
-                # Check the difference in standard deviation against some gold standard.
-                stds = [np.std(np.subtract(ramp, ramps[0])) for ramp in ramps]
+                stds = [np.std(ramp) for ramp in ramps]
 
-                # Print all the ramps.
+                # Print.
                 log.info("Ramps")
                 for ramp in ramps:
                     log.info(np.around(ramp, decimals = 4))
     
-                # Print all standard deviations.
                 log.info("Standard Deviations")
                 for std in stds:
                     log.info(std)
 
-                # Verify standard deviation is not erratic.
+                # Verify standard deviations are roughly equal.
                 for std in stds:
-                    self.assertTrue(std < 0.1)
+                    self.assertTrue(abs(std - stds[0]) < 0.075)
 
-                # Verify ramps ramp upwards.
+                # Verify ramps are increasing.
                 for ramp in ramps:
                     self.assertEqual(ramp, sorted(ramp))
     
