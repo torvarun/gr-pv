@@ -189,7 +189,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             """
 
             # For each center frequency, sweep the TX Gain.
-
             for center_freq in np.arange(10e6, 4000e6, 20e6):
 
                 log.info("%.2f Hz" % center_freq)
@@ -215,9 +214,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 areas = np.array(areas).T.tolist()
                 peaks = np.array(peaks).T.tolist()
 
-                # Compute standard deviations.
-                stds = [np.std(area) for area in areas]
-
                 # Print.
                 log.info("Absolute Areas")
                 for ch, area in enumerate(areas):
@@ -227,14 +223,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 for ch, peak in enumerate(peaks):
                     log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
     
-                log.info("Standard Deviations")
-                for ch, std in enumerate(stds):
-                    log.info("ch[%d]: %r" % (ch, std))
-
-                # Verify standard deviations are roughly equal.
-                for std in stds:
-                    self.assertTrue(abs(std - stds[0]) < 0.05)
-
                 # Verify areas are increasing (just check if list if sorted).
                 for area in areas:
                     self.assertEqual(area, sorted(area))
