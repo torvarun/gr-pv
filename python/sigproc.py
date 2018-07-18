@@ -46,7 +46,7 @@ from the GNU Radio RX Chain.
 
 vsnk layout:
 
-     ch[0]   ch[0]   ...  ch[n]
+     ch[0]   ch[1]   ...  ch[n]
     -----------------------------
      a + bi  a + bi  ...  a + bi             
      a + bi  a + bi  ...  a + bi             
