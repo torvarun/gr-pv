@@ -63,7 +63,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """
 
         self.channels = range(2)
-        print "Channels: " + ' '.join(str(e) for e in self.channels)
 
         # In seconds.
         self.test_time = 6.0
@@ -196,6 +195,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             """
 
             # For each center frequency, sweep the TX Gain.
+            # (10e6, 4000e6, 20e6)
             for center_freq in np.arange(15e6, 1e8, 20e6):
 
                 log.info("%.2f Hz" % center_freq)
