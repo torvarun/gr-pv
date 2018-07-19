@@ -62,7 +62,8 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         Runs before every test is called.
         """
 
-        self.channels = range(4)
+        self.channels = range(2)
+        print "Channels: " + ' '.join(str(e) for e in self.channels)
 
         # In seconds.
         self.test_time = 6.0
@@ -143,7 +144,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         return vsnk
 
     # Quick Debug Testing.
-    if True:
+    if False:
 
         def test_000_t(self):
             vsnk = self.coreTest(8.0, 3.0e4, 15e6)
@@ -180,6 +181,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             """
             Set and Get.
             """
+
+            # Does not work
+            #for ch in self.channels:
+            #    self.csnk.set_gain(1.0, ch)
+            #    self.assertEqual(1.0, self.csnk.get_gain(ch))
+
             pass
 
         def test_006_t(self):
@@ -189,7 +196,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             """
 
             # For each center frequency, sweep the TX Gain.
-            for center_freq in np.arange(15e6, 1e8, 20e4):
+            for center_freq in np.arange(15e6, 1e8, 20e6):
 
                 log.info("%.2f Hz" % center_freq)
 
@@ -226,6 +233,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 # Verify areas are increasing (just check if list if sorted).
                 for area in areas:
                     self.assertEqual(area, sorted(area))
+
+                # Verify peaks are increasing (just check if list is sorted)
+                for peak in peaks:
+                    self.assertEqual(peak, sorted(peak))
     
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_loopback)
