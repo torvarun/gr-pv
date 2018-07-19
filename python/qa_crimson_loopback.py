@@ -62,10 +62,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         Runs before every test is called.
         """
 
-        self.channels = range(2)
+        self.channels = range(4)
 
         # In seconds.
-        self.test_time = 6.0
+        self.test_time = 10.0
 
         # Extra white space for test seperation.
         print ""
@@ -196,21 +196,21 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
             # For each center frequency, sweep the TX Gain.
             # (10e6, 4000e6, 20e6)
-            for center_freq in np.arange(15e6, 1e8, 20e6):
+            for center_freq in np.arange(15e6, 4e9, 10e6):
 
                 log.info("%.2f Hz" % center_freq)
 
                 areas = []
                 peaks = []
 
-                for tx_amp in np.arange(5e3, 35e3, 5.0e3):
+                for tx_amp in np.arange(5e3, 30e3, 1.0e3):
 
                     vsnk = self.coreTest(
                         # High band requires stronger reception when center_freq is greater 120 Mhz.
                         30.0 if center_freq > 120e6 else 10.0,
                         tx_amp,
                         center_freq)
-
+                        
                     area = sigproc.absolute_area(vsnk)
                     peak = sigproc.channel_peaks(vsnk)
 
