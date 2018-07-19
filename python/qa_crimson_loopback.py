@@ -143,7 +143,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         return vsnk
 
     # Quick Debug Testing.
-    if False:
+    if True:
 
         def test_000_t(self):
             vsnk = self.coreTest(8.0, 3.0e4, 15e6)
