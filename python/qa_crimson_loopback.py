@@ -140,7 +140,8 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Return a vsnk sample for further processing and verification.
         # vsnk are to be processed in individual unit tests, eg. def test_xyz_t(self):
         # Read sigproc.py for further information on signal processing and vsnks.
-        return vsnk
+       
+        return vsnk, csnk, csrc
 
     # Quick Debug Testing.
     if False:
@@ -181,12 +182,19 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Set and Get.
             """
 
+            print 'Testing Channels Set and Get'
+            vsnk, csnk, csrc = self.coreTest(10,5e3,15e6)
+
             # Does not work
-            #for ch in self.channels:
-            #    self.csnk.set_gain(1.0, ch)
-            #    self.assertEqual(1.0, self.csnk.get_gain(ch))
+            for ch in self.channels:
+                log.info("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
+
+                csnk.set_gain(1.0, ch)
+                log.info("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
+                #self.assertEqual(1.0, csnk.get_gain(ch))
 
             pass
+
 
         def test_006_t(self):
             """
@@ -205,18 +213,20 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
                 for tx_amp in np.arange(5e3, 30e3, 1.0e3):
 
-                    vsnk = self.coreTest(
+                    vsnk, csnk, csrc = self.coreTest( # Have to receive cnsk and csrc as well. Unused.
                         # High band requires stronger reception when center_freq is greater 120 Mhz.
                         30.0 if center_freq > 120e6 else 10.0,
                         tx_amp,
                         center_freq)
-                        
+
+                    sigproc.dump(vsnk)
+
                     area = sigproc.absolute_area(vsnk)
                     peak = sigproc.channel_peaks(vsnk)
 
                     areas.append(area)
                     peaks.append(peak)
-    
+
                 # Transpose to defragment channel data.
                 areas = np.array(areas).T.tolist()
                 peaks = np.array(peaks).T.tolist()
