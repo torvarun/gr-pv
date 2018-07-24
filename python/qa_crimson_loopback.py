@@ -70,7 +70,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Extra white space for test seperation.
         print ""
 
-    def coreTest(self, rx_gain, tx_amp, center_freq):
+    def coreTest(self, rx_gain, tx_amp, centre_freq):
         """
         |<------------ TX CHAIN ---------->| |<----- RX CHAIN ---->|
                                     +------+ +------+
@@ -107,14 +107,14 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             blocks.complex_to_interleaved_short(True)
             for channel in self.channels]
 
-        csnk = crimson_sink_s(self.channels, sample_rate, center_freq, 0.0)
+        csnk = crimson_sink_s(self.channels, sample_rate, centre_freq, 0.0)
 
         for channel in self.channels:
             tb.connect(sigs[channel], c2ss[channel])
             tb.connect(c2ss[channel], (csnk, channel))
 
         # Blocks and Connections (RX CHAIN).
-        csrc = crimson_source_c(self.channels, sample_rate, center_freq, rx_gain)
+        csrc = crimson_source_c(self.channels, sample_rate, centre_freq, rx_gain)
 
         vsnk = [blocks.vector_sink_c()
             for channel in self.channels]
@@ -144,19 +144,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         return vsnk, csnk, csrc
 
     # Quick Debug Testing.
-    if True:
-
-        def test_dev(self):
-            for x in xrange(0,3):
-                vsnk, csnk, csrc = self.coreTest(8.0, 3.0e4, 15e6)
-
-                diffs = sigproc.phase_diff(vsnk)
-
-                # Check that all the list values are within 5%
-                for diff in xrange(1, len(diffs)):
-                    #Calculate the percent difference relative to phase diff of channels A and B
-                    percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
-                    self.assertLessEqual(percent, 0.05)
+    if False:
 
         def test_000_t(self):
             vsnk, csnk, csrc = self.coreTest(8.0, 3.0e4, 15e6)
@@ -213,12 +201,11 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Gain (Low and High Band).
             Subtask 4700.
             """
+            return
+            # For each centre frequency, sweep the TX Gain.
+            for centre_freq in np.arange(10e6, 4e9, 20e6):
 
-            # For each center frequency, sweep the TX Gain.
-            # (10e6, 4000e6, 20e6)
-            for center_freq in np.arange(15e6, 4e9, 10e6):
-
-                log.info("%.2f Hz" % center_freq)
+                log.info("%.2f Hz" % centre_freq)
 
                 areas = []
                 peaks = []
@@ -226,10 +213,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 for tx_amp in np.arange(5e3, 30e3, 1.0e3):
 
                     vsnk, csnk, csrc = self.coreTest( # Have to receive cnsk and csrc as well. Unused.
-                        # High band requires stronger reception when center_freq is greater 120 Mhz.
-                        30.0 if center_freq > 120e6 else 10.0,
+                        # High band requires stronger reception when centre_freq is greater 120 Mhz.
+                        30.0 if centre_freq > 120e6 else 10.0,
                         tx_amp,
-                        center_freq)
+                        centre_freq)
 
                     #sigproc.dump(vsnk)
 
@@ -259,6 +246,28 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 # Verify peaks are increasing (just check if list is sorted)
                 #for peak in peaks:
                 #    self.assertEqual(peak, sorted(peak))
+
+        def test_007_t(self):
+            """
+            Phase Difference
+            Issue 4812
+            """
+
+            for centre_freq in np.arange(15e6, 4e9, 100e6):
+                
+                log.info("%.2f Hz" % centre_freq)
+
+                #3 iterations at each centre frequency
+                for x in xrange(0,3): 
+                    vsnk, csnk, csrc = self.coreTest(8.0, 3.0e4, 15e6)
+    
+                    diffs = sigproc.phase_diff(vsnk)
+    
+                    # Check that all the list values are within 10%
+                    for diff in xrange(1, len(diffs)):
+                        #Calculate the percent difference relative to phase diff of channels A and B
+                        percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
+                        self.assertLessEqual(percent, 0.1)
     
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_loopback)

@@ -104,7 +104,8 @@ def phase_diff(vsnk):
             phi = np.pi - phi
         elif (phi > np.pi) and (phi < 3 * np.pi / 2):
             phi -= np.pi
-
+        
+        # Phase difference is complex so take the magnitude.
         phase_diffs.append(abs(phi))
 
     return phase_diffs
