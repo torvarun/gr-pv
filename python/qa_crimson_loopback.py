@@ -92,7 +92,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         tb = gr.top_block()
 
         # Variables.
-        sample_rate = 20e6
+        sample_rate = 40e6 #260e6 is the max
         wave_freq = 1e6
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
@@ -144,7 +144,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         return vsnk, csnk, csrc
 
     # Quick Debug Testing.
-    if False:
+    if True:
 
         def test_000_t(self):
             vsnk, csnk, csrc = self.coreTest(8.0, 3.0e4, 15e6)
@@ -182,8 +182,8 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Set and Get.
             """
 
-            print 'Testing Channels Set and Get'
-            vsnk, csnk, csrc = self.coreTest(10,5e3,15e6)
+            #print 'Testing Channels Set and Get'
+            #vsnk, csnk, csrc = self.coreTest(10,5e3,15e6)
 
             # Does not work
             #for ch in self.channels:
@@ -201,7 +201,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             Gain (Low and High Band).
             Subtask 4700.
             """
-            return
+            
+            print "test 6"
+
             # For each centre frequency, sweep the TX Gain.
             for centre_freq in np.arange(10e6, 4e9, 20e6):
 
@@ -218,7 +220,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                         tx_amp,
                         centre_freq)
 
-                    #sigproc.dump(vsnk)
+                    sigproc.dump(vsnk)
 
                     area = sigproc.absolute_area(vsnk)
                     peak = sigproc.channel_peaks(vsnk)
@@ -259,7 +261,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
                 #3 iterations at each centre frequency
                 for x in xrange(0,3): 
-                    vsnk, csnk, csrc = self.coreTest(8.0, 3.0e4, 15e6)
+                    vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
     
                     diffs = sigproc.phase_diff(vsnk)
     
@@ -268,6 +270,25 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                         #Calculate the percent difference relative to phase diff of channels A and B
                         percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
                         self.assertLessEqual(percent, 0.1)
+
+        def test_008_t(self):
+            """
+            Channel Repeatability
+            """
+
+            data = []
+            
+            # 10 runs and store the vsnk data
+            for x in xrange(10):
+                vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
+                runs = sigproc.to_mag(vsnk)
+                data.append(runs)
+            
+            # Compare the channels to the first one. Make sure they are within +/-0.05
+            for run in xrange(1, len(data)):
+                for channel in xrange(len(data[0])):
+                    self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05))
+
     
 if __name__ == '__main__':
     gr_unittest.run(qa_crimson_loopback)

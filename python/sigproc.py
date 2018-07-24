@@ -94,6 +94,10 @@ def absolute_area(vsnk):
     return areas
 
 def phase_diff(vsnk):
+    """
+    Compute the phase differences between channel A and channel B,C,D
+    """
+
     phase_diffs = []
 
     for channel in xrange(1, len(vsnk)):
@@ -125,3 +129,22 @@ def dump(vsnk):
 
     # For extra separation.
     sys.stdout.write("\n")
+
+
+def to_mag(vsnk):
+    """
+    Converts the data from each channel from complex to real
+    """
+
+    holder = []
+    for channel in xrange(len(vsnk)):
+
+        channel_data = []
+        for sample in xrange(len(vsnk[0].data())):
+
+            datum = vsnk[channel].data()[sample]
+            channel_data.append(np.sqrt(datum.real*datum.real + datum.imag*datum.imag))
+
+        holder.append(channel_data)
+
+    return holder
