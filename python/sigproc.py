@@ -59,6 +59,7 @@ Each channel column holds a complex number sample.
 
 import sys
 import numpy as np
+from scipy.signal import correlate
 
 def channel_peaks(vsnk):
     """
@@ -91,6 +92,22 @@ def absolute_area(vsnk):
         areas.append(abs(integral))
 
     return areas
+
+def phase_diff(vsnk):
+    phase_diffs = []
+
+    for channel in xrange(1, len(vsnk)):
+        phi = np.arccos(np.dot(vsnk[0].data(),vsnk[channel].data(),) / (np.linalg.norm(vsnk[0].data(),)*np.linalg.norm(vsnk[channel].data(),)))
+
+        # Convert angle to proper domain
+        if (phi > np.pi/2) and (phi < np.pi):
+            phi = np.pi - phi
+        elif (phi > np.pi) and (phi < 3 * np.pi / 2):
+            phi -= np.pi
+
+        phase_diffs.append(abs(phi))
+
+    return phase_diffs
 
 def dump(vsnk):
     """
