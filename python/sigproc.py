@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright 2018 Per Vices Corporation.
-# 
+#
 # This is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3, or (at your option)
 # any later version.
-# 
+#
 # This software is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this software; see the file COPYING.  If not, write to
 # the Free Software Foundation, Inc., 51 Franklin Street,
@@ -48,10 +48,10 @@ vsnk layout:
 
      ch[0]   ch[1]   ...  ch[n]
     -----------------------------
-     a + bi  a + bi  ...  a + bi             
-     a + bi  a + bi  ...  a + bi             
-     a + bi  a + bi  ...  a + bi             
-     a + bi  a + bi  ...  a + bi             
+     a + bi  a + bi  ...  a + bi
+     a + bi  a + bi  ...  a + bi
+     a + bi  a + bi  ...  a + bi
+     a + bi  a + bi  ...  a + bi
 
 Each channel column holds a complex number sample.
 
@@ -59,7 +59,6 @@ Each channel column holds a complex number sample.
 
 import sys
 import numpy as np
-from scipy.signal import correlate
 
 def channel_peaks(vsnk):
     """
@@ -95,7 +94,8 @@ def absolute_area(vsnk):
 
 def phase_diff(vsnk):
     """
-    Compute the phase differences between channel A and channel B,C,D
+    Compute the phase differences between channel A and channel B,C,D using the phase angle formula.
+    NOTE: The phase differences of the channels are relative to Channel A.
     """
 
     phase_diffs = []
@@ -108,7 +108,7 @@ def phase_diff(vsnk):
             phi = np.pi - phi
         elif (phi > np.pi) and (phi < 3 * np.pi / 2):
             phi -= np.pi
-        
+
         # Phase difference is complex so take the magnitude.
         phase_diffs.append(abs(phi))
 
@@ -133,7 +133,7 @@ def dump(vsnk):
 
 def to_mag(vsnk):
     """
-    Converts the data from each channel from complex to real
+    Converts the IQ sinusoids from each channel into a single sinusoid.
     """
 
     holder = []
