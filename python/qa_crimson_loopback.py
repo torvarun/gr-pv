@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# 
+#
 # Copyright 2018 Per Vices Corporation.
-# 
+#
 # This is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3, or (at your option)
 # any later version.
-# 
+#
 # This software is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this software; see the file COPYING.  If not, write to
 # the Free Software Foundation, Inc., 51 Franklin Street,
@@ -43,7 +43,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         2. Running `make test` will not print test output so run this
            test individually to get printings.
 
-        3. When developing, set the IS_DEV flag to true and change the 
+        3. When developing, set the IS_DEV flag to true and change the
            name of the test being developed to run it in isolation.
 
     Testing Requirements:
@@ -59,7 +59,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     Issue 4698.
     """
- 
+
     def setUp(self):
         """
         Runs before every test is called.
@@ -81,13 +81,13 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         | sig[0] |--->| c2s[0] |--->|ch0   | |   ch0|--->| vsnk[0] |
         +--------+    +--------+    |      | |      |    +---------+
         +--------+    +--------+    |      | |      |    +---------+
-        | sig[1] |--->| c2s[1] |--->|ch1   | |   ch1|--->| vsnk[1] | 
+        | sig[1] |--->| c2s[1] |--->|ch1   | |   ch1|--->| vsnk[1] |
         +--------+    +--------+    |      | |      |    +---------+
         +--------+    +--------+    |      | |      |    +---------+
         | sig[2] |--->| c2s[2] |--->|ch2   | |   ch2|--->| vsnk[2] |
         +--------+    +--------+    |      | |      |    +---------+
         +--------+    +--------+    |      | |      |    +---------+
-        | sig[3] |--->| c2s[3] |--->|ch3   | |   ch3|--->| vsnk[3] | 
+        | sig[3] |--->| c2s[3] |--->|ch3   | |   ch3|--->| vsnk[3] |
         +--------+    +--------+    | csnk | | csrc |    +---------+
                                     +------+ +------+
         """
@@ -143,7 +143,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Return a vsnk sample for further processing and verification.
         # vsnk are to be processed in individual unit tests, eg. def test_xyz_t(self):
         # Read sigproc.py for further information on signal processing and vsnks.
-       
+
         return vsnk, csnk, csrc
 
     #-----------------------------------------------------------------------------------#
@@ -155,7 +155,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     def test_002_t(self):
         """Flow Control"""
-        
+
         pass
 
     def test_003_t(self):
@@ -223,7 +223,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             #log.info("Channel Peaks")
             #for ch, peak in enumerate(peaks):
             #    log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
-    
+
             # Verify areas are increasing (just check if list if sorted).
             for area in areas:
                 self.assertEqual(area, sorted(area))
@@ -236,15 +236,15 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Phase Difference: Subtask 4812"""
 
         for centre_freq in np.arange(15e6, 4e9, 100e6):
-            
+
             log.info("%.2f Hz" % centre_freq)
 
             #3 iterations at each centre frequency
-            for x in xrange(0,3): 
-                vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
-    
+            for x in xrange(0,3):
+                vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
+
                 diffs = sigproc.phase_diff(vsnk)
-    
+
                 # Check that all the list values are within 10%
                 for diff in xrange(1, len(diffs)):
                     #Calculate the percent difference relative to phase diff of channels A and B
@@ -255,20 +255,20 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Channel Repeatability"""
 
         data = []
-        
+
         # 10 runs and store the vsnk data
         for x in xrange(10):
             vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
             runs = sigproc.to_mag(vsnk)
             data.append(runs)
-        
+
         # Compare the channels to the first one. Make sure they are within +/-0.05
         for run in xrange(1, len(data)):
             for channel in xrange(len(data[0])):
                 self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05))
-    
+
 if __name__ == '__main__':
-    
+
     # Flag for test development
     IS_DEV = False
 
@@ -279,5 +279,5 @@ if __name__ == '__main__':
         crimson_test_suite.addTest(qa_crimson_loopback('test_001_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
-    
+
     gr_unittest.TextTestRunner(verbosity=2).run(crimson_test_suite)
