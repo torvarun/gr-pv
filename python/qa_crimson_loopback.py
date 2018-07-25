@@ -43,6 +43,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         2. Running `make test` will not print test output so run this
            test individually to get printings.
 
+        3. When developing, set the IS_DEV flag to true and change the 
+           name of the test being developed to run it in isolation.
+
     Testing Requirements:
 
         1. Channel Independence:
@@ -56,7 +59,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     Issue 4698.
     """
-
+ 
     def setUp(self):
         """
         Runs before every test is called.
@@ -143,152 +146,138 @@ class qa_crimson_loopback(gr_unittest.TestCase):
        
         return vsnk, csnk, csrc
 
-    # Quick Debug Testing.
-    if True:
+    #-----------------------------------------------------------------------------------#
 
-        def test_000_t(self):
-            vsnk, csnk, csrc = self.coreTest(8.0, 3.0e4, 15e6)
-            sigproc.dump(vsnk)
+    def test_001_t(self):
+        """Trigger"""
 
-    # Full Testing.
-    else:
+        pass
 
-        def test_001_t(self):
-            """
-            Trigger.
-            """
-            pass
+    def test_002_t(self):
+        """Flow Control"""
+        
+        pass
 
-        def test_002_t(self):
-            """
-            Flow Control.
-            """
-            pass
+    def test_003_t(self):
+        """Phase Coherency"""
 
-        def test_003_t(self):
-            """
-            Phase Coherency.
-            """
-            pass
+        pass
 
-        def test_004_t(self):
-            """
-            Start of Burst.
-            """
-            pass
+    def test_004_t(self):
+        """Start of Burst"""
 
-        def test_005_t(self):
-            """
-            Set and Get.
-            """
+        pass
 
-            #print 'Testing Channels Set and Get'
-            #vsnk, csnk, csrc = self.coreTest(10,5e3,15e6)
+    def test_005_t(self):
+        """Set and Get"""
 
-            # Does not work
-            #for ch in self.channels:
-            #    log.info("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
+        #vsnk, csnk, csrc = self.coreTest(10,5e3,15e6)
 
-            #    csnk.set_gain(1.0, ch)
-            #    log.info("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
-            #    #self.assertEqual(1.0, csnk.get_gain(ch))
+        # Does not work
+        #for ch in self.channels:
+        #    log.info("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
 
-            pass
+        #    csnk.set_gain(1.0, ch)
+        #    log.info("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
+        #    #self.assertEqual(1.0, csnk.get_gain(ch))
+
+        pass
 
 
-        def test_006_t(self):
-            """
-            Gain (Low and High Band).
-            Subtask 4700.
-            """
+    def test_006_t(self):
+        """Gain (Low and High Band): Subtask 4700"""
+
+        # For each centre frequency, sweep the TX Gain.
+        for centre_freq in np.arange(10e6, 4e9, 20e6):
+
+            log.info("%.2f Hz" % centre_freq)
+
+            areas = []
+            peaks = []
+
+            for tx_amp in np.arange(5e3, 30e3, 1.0e3):
+
+                vsnk, csnk, csrc = self.coreTest( # Have to receive cnsk and csrc as well. Unused.
+                    # High band requires stronger reception when centre_freq is greater 120 Mhz.
+                    30.0 if centre_freq > 120e6 else 10.0,
+                    tx_amp,
+                    centre_freq)
+
+                sigproc.dump(vsnk)
+
+                area = sigproc.absolute_area(vsnk)
+                peak = sigproc.channel_peaks(vsnk)
+
+                areas.append(area)
+                peaks.append(peak)
+
+            # Transpose to defragment channel data.
+            areas = np.array(areas).T.tolist()
+            peaks = np.array(peaks).T.tolist()
+
+            # Print.
+            log.info("Absolute Areas")
+            for ch, area in enumerate(areas):
+                log.info("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
+
+            #log.info("Channel Peaks")
+            #for ch, peak in enumerate(peaks):
+            #    log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
+    
+            # Verify areas are increasing (just check if list if sorted).
+            for area in areas:
+                self.assertEqual(area, sorted(area))
+
+            # Verify peaks are increasing (just check if list is sorted)
+            #for peak in peaks:
+            #    self.assertEqual(peak, sorted(peak))
+
+    def test_007_t(self):
+        """Phase Difference: Subtask 4812"""
+
+        for centre_freq in np.arange(15e6, 4e9, 100e6):
             
-            print "test 6"
+            log.info("%.2f Hz" % centre_freq)
 
-            # For each centre frequency, sweep the TX Gain.
-            for centre_freq in np.arange(10e6, 4e9, 20e6):
-
-                log.info("%.2f Hz" % centre_freq)
-
-                areas = []
-                peaks = []
-
-                for tx_amp in np.arange(5e3, 30e3, 1.0e3):
-
-                    vsnk, csnk, csrc = self.coreTest( # Have to receive cnsk and csrc as well. Unused.
-                        # High band requires stronger reception when centre_freq is greater 120 Mhz.
-                        30.0 if centre_freq > 120e6 else 10.0,
-                        tx_amp,
-                        centre_freq)
-
-                    sigproc.dump(vsnk)
-
-                    area = sigproc.absolute_area(vsnk)
-                    peak = sigproc.channel_peaks(vsnk)
-
-                    areas.append(area)
-                    peaks.append(peak)
-
-                # Transpose to defragment channel data.
-                areas = np.array(areas).T.tolist()
-                peaks = np.array(peaks).T.tolist()
-
-                # Print.
-                log.info("Absolute Areas")
-                for ch, area in enumerate(areas):
-                    log.info("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
-
-                #log.info("Channel Peaks")
-                #for ch, peak in enumerate(peaks):
-                #    log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
-    
-                # Verify areas are increasing (just check if list if sorted).
-                for area in areas:
-                    self.assertEqual(area, sorted(area))
-
-                # Verify peaks are increasing (just check if list is sorted)
-                #for peak in peaks:
-                #    self.assertEqual(peak, sorted(peak))
-
-        def test_007_t(self):
-            """
-            Phase Difference
-            Issue 4812
-            """
-
-            for centre_freq in np.arange(15e6, 4e9, 100e6):
-                
-                log.info("%.2f Hz" % centre_freq)
-
-                #3 iterations at each centre frequency
-                for x in xrange(0,3): 
-                    vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
-    
-                    diffs = sigproc.phase_diff(vsnk)
-    
-                    # Check that all the list values are within 10%
-                    for diff in xrange(1, len(diffs)):
-                        #Calculate the percent difference relative to phase diff of channels A and B
-                        percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
-                        self.assertLessEqual(percent, 0.1)
-
-        def test_008_t(self):
-            """
-            Channel Repeatability
-            """
-
-            data = []
-            
-            # 10 runs and store the vsnk data
-            for x in xrange(10):
+            #3 iterations at each centre frequency
+            for x in xrange(0,3): 
                 vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
-                runs = sigproc.to_mag(vsnk)
-                data.append(runs)
-            
-            # Compare the channels to the first one. Make sure they are within +/-0.05
-            for run in xrange(1, len(data)):
-                for channel in xrange(len(data[0])):
-                    self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05))
+    
+                diffs = sigproc.phase_diff(vsnk)
+    
+                # Check that all the list values are within 10%
+                for diff in xrange(1, len(diffs)):
+                    #Calculate the percent difference relative to phase diff of channels A and B
+                    percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
+                    self.assertLessEqual(percent, 0.1)
 
+    def test_008_t(self):
+        """Channel Repeatability"""
+
+        data = []
+        
+        # 10 runs and store the vsnk data
+        for x in xrange(10):
+            vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
+            runs = sigproc.to_mag(vsnk)
+            data.append(runs)
+        
+        # Compare the channels to the first one. Make sure they are within +/-0.05
+        for run in xrange(1, len(data)):
+            for channel in xrange(len(data[0])):
+                self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05))
     
 if __name__ == '__main__':
-    gr_unittest.run(qa_crimson_loopback)
+    
+    # Flag for test development
+    IS_DEV = False
+
+    crimson_test_suite  = gr_unittest.TestSuite()
+
+    if IS_DEV:
+        # Runs only the specified test in isolation
+        crimson_test_suite.addTest(qa_crimson_loopback('test_001_t'))
+    else:
+        crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
+    
+    gr_unittest.TextTestRunner(verbosity=2).run(crimson_test_suite)
