@@ -33,6 +33,7 @@ import sigproc
 import numpy as np
 
 from log import log
+import MockCrimson
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -59,6 +60,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     Issue 4698.
     """
+
+    # Flag for test development
+    self._IS_DEV = False
 
     def setUp(self):
         """
@@ -101,51 +105,59 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
         sc.num_samps = 64
 
-        # Blocks and Connections (TX CHAIN).
-        sigs = [
-            analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, tx_amp, 0.0)
-            for channel in self.channels]
+        if !self._IS_DEV:
 
-        c2ss = [
-            blocks.complex_to_interleaved_short(True)
-            for channel in self.channels]
+            # Blocks and Connections (TX CHAIN).
+            sigs = [
+                analog.sig_source_c(sample_rate, analog.GR_SIN_WAVE, wave_freq, tx_amp, 0.0)
+                for channel in self.channels]
 
-        csnk = crimson_sink_s(self.channels, sample_rate, centre_freq, 0.0)
+            c2ss = [
+                blocks.complex_to_interleaved_short(True)
+                for channel in self.channels]
 
-        for channel in self.channels:
-            tb.connect(sigs[channel], c2ss[channel])
-            tb.connect(c2ss[channel], (csnk, channel))
+            csnk = crimson_sink_s(self.channels, sample_rate, centre_freq, 0.0)
 
-        # Blocks and Connections (RX CHAIN).
-        csrc = crimson_source_c(self.channels, sample_rate, centre_freq, rx_gain)
+            for channel in self.channels:
+                tb.connect(sigs[channel], c2ss[channel])
+                tb.connect(c2ss[channel], (csnk, channel))
 
-        vsnk = [blocks.vector_sink_c()
-            for channel in self.channels]
+            # Blocks and Connections (RX CHAIN).
+            csrc = crimson_source_c(self.channels, sample_rate, centre_freq, rx_gain)
 
-        for channel in self.channels:
-            tb.connect((csrc, channel), vsnk[channel])
+            vsnk = [blocks.vector_sink_c()
+                for channel in self.channels]
 
-        # Reset TX and RX times to be roughly in sync.
-        csnk.set_time_now(uhd.time_spec_t(0.0))
-        csrc.set_time_now(uhd.time_spec_t(0.0))
+            for channel in self.channels:
+                tb.connect((csrc, channel), vsnk[channel])
 
-        # Issue stream command to start RX chain somewhere in the middle of the test.
-        sc.stream_now = False
-        sc.time_spec = uhd.time_spec_t(self.test_time / 2.0)
-        csrc.issue_stream_cmd(sc)
+            # Reset TX and RX times to be roughly in sync.
+            csnk.set_time_now(uhd.time_spec_t(0.0))
+            csrc.set_time_now(uhd.time_spec_t(0.0))
 
-        # Run the test.
-        tb.start()
-        time.sleep(self.test_time)
-        tb.stop()
-        tb.wait()
+            # Issue stream command to start RX chain somewhere in the middle of the test.
+            sc.stream_now = False
+            sc.time_spec = uhd.time_spec_t(self.test_time / 2.0)
+            csrc.issue_stream_cmd(sc)
 
-        # Return a vsnk sample for further processing and verification.
-        # vsnk are to be processed in individual unit tests, eg. def test_xyz_t(self):
-        # Read sigproc.py for further information on signal processing and vsnks.
+            # Run the test.
+            tb.start()
+            time.sleep(self.test_time)
+            tb.stop()
+            tb.wait()
 
-        return vsnk, csnk, csrc
+            # Return a vsnk sample for further processing and verification.
+            # vsnk are to be processed in individual unit tests, eg. def test_xyz_t(self):
+            # Read sigproc.py for further information on signal processing and vsnks.
 
+            return vsnk, csnk, csrc
+
+        else:
+            crimson = MockCrimson(self.test_time, sc.num_samples, sample_rate)
+            crimson.amp = tx_amp
+            crimson.freq = wave_freq
+            vsnk = crimson.sample()
+            return vsnk
     #-----------------------------------------------------------------------------------#
 
     def test_001_t(self):
@@ -269,12 +281,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
 if __name__ == '__main__':
 
-    # Flag for test development
-    IS_DEV = False
-
     crimson_test_suite  = gr_unittest.TestSuite()
 
-    if IS_DEV:
+    if _IS_DEV:
         # Runs only the specified test in isolation
         crimson_test_suite.addTest(qa_crimson_loopback('test_001_t'))
     else:

@@ -22,7 +22,7 @@
 import numpy as np
 import ChannelMock
 
-class crimson_mock:
+class MockCrimson:
     """
     x(t) = A*sin(2*pi*f*t)
     """
