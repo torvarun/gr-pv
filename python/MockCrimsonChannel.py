@@ -19,7 +19,7 @@
 # Boston, MA 02110-1301, USA.
 #
 
-class MockCrimsonChannel:
+class MockCrimsonChannel(object):
     """
     Mock of a vsink channel
     """

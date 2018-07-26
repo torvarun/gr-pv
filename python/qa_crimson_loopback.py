@@ -154,8 +154,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
         else:
             crimson = MockCrimson(self.test_time, sc.num_samps, sample_rate)
-            crimson.amp = tx_amp
-            crimson.freq = wave_freq
+            #crimson.amp = tx_amp
+            crimson.freq = centre_freq
+            print crimson.equation()
             vsnk = crimson.sample()
             return vsnk
     #-----------------------------------------------------------------------------------#
