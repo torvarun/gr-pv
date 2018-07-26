@@ -20,7 +20,7 @@
 #
 
 import numpy as np
-import ChannelMock
+from MockCrimsonChannel import MockCrimsonChannel
 
 class MockCrimson:
     """
@@ -29,11 +29,10 @@ class MockCrimson:
 
     def __init__(self, time=5, num_samples=64, sample_rate=20e6):
         self._amp = 1
-        self._freq = 1/(2 * np.pii)
+        self._freq = 1/(2 * np.pi)
         self._time = time
         self._num_samples = num_samples
         self._sample_rate = sample_rate
-        self._vsnk = VsnkMock(4)
         self._num_channels = 4 #Crimson has 4 channels
 
     @property
@@ -95,23 +94,19 @@ class MockCrimson:
         data = []
 
         t = self._time / 2
-        i = 0
         while len(data) < self._num_samples:
-            data[i].real = __sine_real(x)
-            data[i].imag = __sine_imag(x)
-
+            data.append(complex(self.__sine_real(t), self.__sine_imag(t)))
             t += self._sample_rate
-            i++
 
         return data
 
     def sample(self):
-        vsnk = []
+        vsnk = [None] * self._num_channels
 
-        for x in xrange(self._num_channels):
-            vsnk[x] = ChannelMock()
+        for x in xrange(len(vsnk)):
+            vsnk[x] = MockCrimsonChannel()
 
-            data = __generate_data()
+            data = self.__generate_data()
             vsnk[x].update_data(data)
 
-        return vnsk
+        return vsnk

@@ -33,7 +33,7 @@ import sigproc
 import numpy as np
 
 from log import log
-import MockCrimson
+from MockCrimson import MockCrimson
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -61,13 +61,13 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     Issue 4698.
     """
 
-    # Flag for test development
-    self._IS_DEV = False
-
     def setUp(self):
         """
         Runs before every test is called.
         """
+
+        # Flag for test development
+        self._IS_DEV = True
 
         self.channels = range(4)
 
@@ -105,7 +105,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
         sc.num_samps = 64
 
-        if !self._IS_DEV:
+        if not self._IS_DEV:
 
             # Blocks and Connections (TX CHAIN).
             sigs = [
@@ -153,7 +153,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             return vsnk, csnk, csrc
 
         else:
-            crimson = MockCrimson(self.test_time, sc.num_samples, sample_rate)
+            crimson = MockCrimson(self.test_time, sc.num_samps, sample_rate)
             crimson.amp = tx_amp
             crimson.freq = wave_freq
             vsnk = crimson.sample()
@@ -162,6 +162,11 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     def test_001_t(self):
         """Trigger"""
+
+        vsnk = self.coreTest(8.0, 3.0e4, 15e6)
+        sigproc.dump(vsnk)
+
+        print "done test"
 
         pass
 
@@ -283,7 +288,9 @@ if __name__ == '__main__':
 
     crimson_test_suite  = gr_unittest.TestSuite()
 
-    if _IS_DEV:
+    IS_DEV = True
+
+    if IS_DEV:
         # Runs only the specified test in isolation
         crimson_test_suite.addTest(qa_crimson_loopback('test_001_t'))
     else:
