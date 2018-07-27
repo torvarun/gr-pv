@@ -67,7 +67,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """
 
         # Flag to mock the vsnk or not
-        self._TO_MOCK = False
+        self._TO_MOCK = True
 
         self.channels = range(4)
 
@@ -281,16 +281,35 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             for channel in xrange(len(data[0])):
                 self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05))
 
+    def test_008_t(self):
+        """Channel to Channel Consistency"""
+
+        for centre_freq in np.arange(15e6, 4e9, 100e6):
+
+            log.info("%.2f Hz" % centre_freq)
+
+            #3 iterations at each centre frequency
+            for x in xrange(0,3):
+                vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
+
+                #Convert to magnitude
+                vsnk = sigproc.to_mag(vsnk)
+
+                #Check that the channels are all similar to each other
+                for channel in xrange(1, len(vsnk)):
+                    self.assertTrue(np.allclose(vsnk[0], vsnk[channel]), 0.05, 0.05)
+
+
 if __name__ == '__main__':
 
     crimson_test_suite  = gr_unittest.TestSuite()
 
     # Flag for test development
-    IS_DEV = False
+    IS_DEV = True
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_001_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_008_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 
