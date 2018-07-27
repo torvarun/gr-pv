@@ -231,14 +231,14 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             areas = []
             peaks = []
 
-            for tx_amp in np.arange(5e3, 30e3, 1.0e3):
+            for tx_amp in np.arange(5e3, 30e3, 5.0e3):
 
                 vsnk = self.coreTest(# High band requires stronger reception when centre_freq is greater 120 Mhz.
                     30.0 if centre_freq > 120e6 else 10.0,
                     tx_amp,
                     centre_freq)[0]
 
-                sigproc.dump(vsnk)
+                #sigproc.dump(vsnk)
 
                 area = sigproc.absolute_area(vsnk)
                 peak = sigproc.channel_peaks(vsnk)
@@ -255,17 +255,17 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             for ch, area in enumerate(areas):
                 log.info("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
 
-            #log.info("Channel Peaks")
-            #for ch, peak in enumerate(peaks):
-            #    log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
+            log.info("Channel Peaks")
+            for ch, peak in enumerate(peaks):
+                log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
 
             # Verify areas are increasing (just check if list if sorted).
             for area in areas:
                 self.assertEqual(area, sorted(area))
 
             # Verify peaks are increasing (just check if list is sorted)
-            #for peak in peaks:
-            #    self.assertEqual(peak, sorted(peak))
+            for peak in peaks:
+                self.assertEqual(peak, sorted(peak))
 
     def test_007_t(self):
         """Channel Repeatability"""
@@ -311,7 +311,7 @@ if __name__ == '__main__':
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_008_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_006_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 
