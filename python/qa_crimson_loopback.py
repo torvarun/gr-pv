@@ -67,7 +67,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """
 
         # Flag to mock the vsnk or not
-        self._TO_MOCK = True
+        self._TO_MOCK = False
 
         self.channels = range(4)
 
@@ -99,7 +99,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         tb = gr.top_block()
 
         # Variables.
-        sample_rate = 40e6 #260e6 is the max
+        sample_rate = 20e6 #260e6 is the max
         wave_freq = 1e6
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
@@ -307,7 +307,7 @@ if __name__ == '__main__':
     crimson_test_suite  = gr_unittest.TestSuite()
 
     # Flag for test development
-    IS_DEV = True
+    IS_DEV = False
 
     if IS_DEV:
         # Runs only the specified test in isolation
