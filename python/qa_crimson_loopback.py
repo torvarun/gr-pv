@@ -66,10 +66,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         Runs before every test is called.
         """
 
-        # Flag to mock the vsnk or not
+        # Flag to use the Crimson Mock
         self._TO_MOCK = False
 
-        self.channels = range(4)
+        self.channels = range(1)
 
         # In seconds.
         self.test_time = 5.0
@@ -99,7 +99,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         tb = gr.top_block()
 
         # Variables.
-        sample_rate = 40e6 #260e6 is the max
+        sample_rate = 20e6 # 260e6 is the max
         wave_freq = 1e6
 
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
@@ -156,9 +156,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             crimson = MockCrimson(self.test_time, sc.num_samps, sample_rate)
             #crimson.amp = tx_amp
             crimson.freq = centre_freq
-            print crimson.equation()
+            #print crimson.equation()
             vsnk = crimson.sample()
-            return vsnk, None, None #Match tuple
+            return vsnk, None, None
     #-----------------------------------------------------------------------------------#
 
     def test_001_t(self):
@@ -206,20 +206,24 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Gain (Low and High Band): Subtask 4700"""
 
         # For each centre frequency, sweep the TX Gain.
-        for centre_freq in np.arange(10e6, 4e9, 20e6):
+        for centre_freq in np.arange(10e6, 4e9, 10e6):
 
             log.info("%.2f Hz" % centre_freq)
 
             areas = []
             peaks = []
 
-            for tx_amp in np.arange(5e3, 30e3, 1.0e3):
+            amp = []
 
-                vsnk = self.coreTest(# High band requires stronger reception when centre_freq is greater 120 Mhz.
+            for tx_amp in np.arange(5e3, 35e3, 1.0e3):
+
+                vsnk = self.coreTest(
+                    # High band requires stronger reception when centre_freq is greater 120 Mhz.
                     30.0 if centre_freq > 120e6 else 10.0,
                     tx_amp,
                     centre_freq)[0]
 
+                amp.append(tx_amp)
                 sigproc.dump(vsnk)
 
                 area = sigproc.absolute_area(vsnk)
@@ -233,17 +237,23 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             peaks = np.array(peaks).T.tolist()
 
             # Print.
-            log.info("Absolute Areas")
-            for ch, area in enumerate(areas):
-                log.info("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
+            #log.info("Absolute Areas")
+            #for ch, area in enumerate(areas):
+            #    log.info("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
 
             #log.info("Channel Peaks")
             #for ch, peak in enumerate(peaks):
             #    log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
 
+            sum = 0
+            for x in xrange(len(amp)):
+                sum += amp[x]/peaks[0][x]
+
+            log.info(sum/(len(amp)*1.0))
+
             # Verify areas are increasing (just check if list if sorted).
-            for area in areas:
-                self.assertEqual(area, sorted(area))
+            #for area in areas:
+            #    self.assertEqual(area, sorted(area))
 
             # Verify peaks are increasing (just check if list is sorted)
             #for peak in peaks:
@@ -288,12 +298,11 @@ if __name__ == '__main__':
 
     crimson_test_suite  = gr_unittest.TestSuite()
 
-    # Flag for test development
-    IS_DEV = False
+    IS_DEV = True
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_001_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_006_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 
