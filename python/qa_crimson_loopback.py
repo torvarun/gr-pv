@@ -66,8 +66,8 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         Runs before every test is called.
         """
 
-        # Flag for test development
-        self._IS_DEV = True
+        # Flag to mock the vsnk or not
+        self._TO_MOCK = False
 
         self.channels = range(4)
 
@@ -105,7 +105,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         sc = uhd.stream_cmd_t(uhd.stream_cmd_t.STREAM_MODE_NUM_SAMPS_AND_DONE)
         sc.num_samps = 64
 
-        if not self._IS_DEV:
+        if not self._TO_MOCK:
 
             # Blocks and Connections (TX CHAIN).
             sigs = [
@@ -158,13 +158,13 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             crimson.freq = centre_freq
             print crimson.equation()
             vsnk = crimson.sample()
-            return vsnk
+            return vsnk, None, None #Match tuple
     #-----------------------------------------------------------------------------------#
 
     def test_001_t(self):
         """Trigger"""
 
-        vsnk = self.coreTest(8.0, 3.0e4, 15e6)
+        vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
         sigproc.dump(vsnk)
 
         print "done test"
@@ -215,11 +215,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
             for tx_amp in np.arange(5e3, 30e3, 1.0e3):
 
-                vsnk, csnk, csrc = self.coreTest( # Have to receive cnsk and csrc as well. Unused.
-                    # High band requires stronger reception when centre_freq is greater 120 Mhz.
+                vsnk = self.coreTest(# High band requires stronger reception when centre_freq is greater 120 Mhz.
                     30.0 if centre_freq > 120e6 else 10.0,
                     tx_amp,
-                    centre_freq)
+                    centre_freq)[0]
 
                 sigproc.dump(vsnk)
 
@@ -289,7 +288,8 @@ if __name__ == '__main__':
 
     crimson_test_suite  = gr_unittest.TestSuite()
 
-    IS_DEV = True
+    # Flag for test development
+    IS_DEV = False
 
     if IS_DEV:
         # Runs only the specified test in isolation
