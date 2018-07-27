@@ -161,13 +161,15 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             return vsnk, None, None #Match tuple
     #-----------------------------------------------------------------------------------#
 
-    def test_001_t(self):
-        """Trigger"""
+    @unittest.skip("Skipping the debug check test")
+    def test_000_t(self):
+        """Quick Debug Test"""
 
         vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
         sigproc.dump(vsnk)
 
-        print "done test"
+    def test_001_t(self):
+        """Trigger"""
 
         pass
 
@@ -177,9 +179,23 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         pass
 
     def test_003_t(self):
-        """Phase Coherency"""
+        """Phase Coherency: Subtask 4812"""
 
-        pass
+        for centre_freq in np.arange(15e6, 4e9, 100e6):
+
+            log.info("%.2f Hz" % centre_freq)
+
+            #3 iterations at each centre frequency
+            for x in xrange(0,3):
+                vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
+
+                diffs = sigproc.phase_diff(vsnk)
+
+                # Check that all the list values are within 10%
+                for diff in xrange(1, len(diffs)):
+                    #Calculate the percent difference relative to phase diff of channels A and B
+                    percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
+                    self.assertLessEqual(percent, 0.1)
 
     def test_004_t(self):
         """Start of Burst"""
@@ -250,25 +266,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             #    self.assertEqual(peak, sorted(peak))
 
     def test_007_t(self):
-        """Phase Difference: Subtask 4812"""
-
-        for centre_freq in np.arange(15e6, 4e9, 100e6):
-
-            log.info("%.2f Hz" % centre_freq)
-
-            #3 iterations at each centre frequency
-            for x in xrange(0,3):
-                vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
-
-                diffs = sigproc.phase_diff(vsnk)
-
-                # Check that all the list values are within 10%
-                for diff in xrange(1, len(diffs)):
-                    #Calculate the percent difference relative to phase diff of channels A and B
-                    percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
-                    self.assertLessEqual(percent, 0.1)
-
-    def test_008_t(self):
         """Channel Repeatability"""
 
         data = []
