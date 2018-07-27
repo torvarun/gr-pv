@@ -156,12 +156,14 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             crimson = MockCrimson(self.test_time, sc.num_samps, sample_rate)
             #crimson.amp = tx_amp
             crimson.freq = centre_freq
-            print crimson.equation()
+            #print crimson.equation()
+            
             vsnk = crimson.sample()
+            
             return vsnk, None, None #Match tuple
     #-----------------------------------------------------------------------------------#
 
-    @unittest.skip("Skipping the debug check test")
+    #@unittest.skip("Skipping the debug check test")
     def test_000_t(self):
         """Quick Debug Test"""
 
@@ -297,7 +299,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
                 #Check that the channels are all similar to each other
                 for channel in xrange(1, len(vsnk)):
-                    self.assertTrue(np.allclose(vsnk[0], vsnk[channel]), 0.05, 0.05)
+                    self.assertTrue(np.allclose(vsnk[0], vsnk[channel], 0.05, 0.05))
 
 
 if __name__ == '__main__':
