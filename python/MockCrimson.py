@@ -20,12 +20,25 @@
 #
 
 import numpy as np
-from MockCrimsonChannel import MockCrimsonChannel
 
 class MockCrimson(object):
     """
     x(t) = A*sin(2.0*pi*f*t)
     """
+
+    class MockCrimsonChannel(object):
+        """
+        Mock of a vsink channel. Required to match GRC's generated vsink.
+        """
+
+        def __init__(self):
+            self._data = []
+
+        def update_data(self, data):
+           self._data = data
+
+        def data(self):
+            return self._data
 
     def __init__(self, time=5, num_samples=64, sample_rate=2.00e6):
         self._amp = 1
@@ -112,4 +125,5 @@ class MockCrimson(object):
         return vsnk
 
     def equation(self):
+        """Returns a formatter string of the sine wave being generated"""
         return "x(t) = {:5.2f} * sin(2 * pi * {:5.2f} * t)".format(self._amp, self._freq)

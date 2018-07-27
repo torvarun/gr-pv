@@ -157,9 +157,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             #crimson.amp = tx_amp
             crimson.freq = centre_freq
             #print crimson.equation()
-            
+
             vsnk = crimson.sample()
-            
+
             return vsnk, None, None #Match tuple
     #-----------------------------------------------------------------------------------#
 
@@ -206,22 +206,25 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     def test_005_t(self):
         """Set and Get"""
-
-        #vsnk, csnk, csrc = self.coreTest(10,5e3,15e6)
-
         # Does not work
-        #for ch in self.channels:
-        #    log.info("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
 
-        #    csnk.set_gain(1.0, ch)
-        #    log.info("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
-        #    #self.assertEqual(1.0, csnk.get_gain(ch))
+        csnk = self.coreTest(10,5e3,15e6)[1]
+
+        for ch in self.channels:
+            log.info("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
+
+            csnk.set_gain(1.0, ch) # Set the gain on the channel
+            log.info("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
+
+            self.assertEqual(1.0, csnk.get_gain(ch))
 
         pass
 
 
     def test_006_t(self):
         """Gain (Low and High Band): Subtask 4700"""
+        # Checks using the areas of the waves and the peaks to verify (x2)
+
 
         # For each centre frequency, sweep the TX Gain.
         for centre_freq in np.arange(10e6, 4e9, 20e6):
