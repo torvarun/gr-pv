@@ -1,3 +1,4 @@
 build/
 *.pyc
 octave_scripts/
+*.log

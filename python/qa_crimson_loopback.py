@@ -30,10 +30,10 @@ from crimson_sink_s import crimson_sink_s
 
 import time
 import sigproc
+from MockCrimson import MockCrimson
 import numpy as np
 
 from log import log
-from MockCrimson import MockCrimson
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -67,7 +67,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """
 
         # Flag to mock the vsnk or not
-        self._TO_MOCK = False
+        self._TO_MOCK = True
 
         self.channels = range(4)
 
@@ -76,6 +76,20 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
         # Extra white space for test seperation.
         print ""
+
+        self.failures = [] # List of all the failures from a specific unittest
+
+        log.debug('{:25}'.format(self.shortDescription()) + " Start")
+
+
+    def tearDown(self):
+        # Log the status fo the test
+        if self.failures == []:
+            log.info('{:25}'.format(self.shortDescription()) + " Pass")
+        else:
+            # Failure message with relevant info
+            log.info('{:25}'.format(self.shortDescription()) +  " Fail\n" + ' '*26 + str(self.failures))
+
 
     def coreTest(self, rx_gain, tx_amp, centre_freq):
         """
@@ -168,7 +182,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Quick Debug Test"""
 
         vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
-        sigproc.dump(vsnk)
+        #sigproc.dump(vsnk)
 
     def test_001_t(self):
         """Trigger"""
@@ -181,11 +195,14 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         pass
 
     def test_003_t(self):
-        """Phase Coherency: Subtask 4812"""
+        """Phase Coherency"""
+
+        # TODO Verify channel 0/1 phase diff against 2/3
+        # Current method assumes Ch 0 is golden
 
         for centre_freq in np.arange(15e6, 4e9, 100e6):
 
-            log.info("%.2f Hz" % centre_freq)
+            log.debug("%.2f Hz" % centre_freq)
 
             #3 iterations at each centre frequency
             for x in xrange(0,3):
@@ -197,43 +214,47 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 for diff in xrange(1, len(diffs)):
                     #Calculate the percent difference relative to phase diff of channels A and B
                     percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
-                    self.assertLessEqual(percent, 0.1)
+
+                    try: self.assertLessEqual(percent, 0.1,
+                            "Ch {} at {:.0f} MHz central frequency".format(diff, centre_freq/1e6))
+                    except AssertionError, e: self.failures.append(str(e))
 
     def test_004_t(self):
         """Start of Burst"""
 
-        pass
+        try: self.assertTrue(0 == 1, "This should fail")
+        except AssertionError, e: self.failures.append(str(e))
 
     def test_005_t(self):
         """Set and Get"""
         # Does not work
 
-        csnk = self.coreTest(10,5e3,15e6)[1]
+        #csnk = self.coreTest(10,5e3,15e6)[1]
 
-        for ch in self.channels:
-            log.info("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
+        #for ch in self.channels:
+        #    log.debug("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
 
-            csnk.set_gain(1.0, ch) # Set the gain on the channel
-            log.info("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
+        #    csnk.set_gain(1.0, ch) # Set the gain on the channel
+        #    log.debug("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
 
-            self.assertEqual(1.0, csnk.get_gain(ch))
+        #    try: self.assertEqual(1.0, csnk.get_gain(ch))
+        #    except AssertionError, e: self.failures.append(str(e))
 
         pass
 
-
     def test_006_t(self):
-        """Gain (Low and High Band): Subtask 4700"""
+        """Gain (LB + HB)"""
         # Checks using the areas of the waves and the peaks to verify (x2)
 
 
-        # For each centre frequency, sweep the TX Gain.
         for centre_freq in np.arange(10e6, 4e9, 20e6):
 
-            log.info("%.2f Hz" % centre_freq)
+            log.debug("%.2f Hz" % centre_freq)
 
             areas = []
             peaks = []
 
+            # For each centre frequency, sweep the TX Gain.
             for tx_amp in np.arange(5e3, 30e3, 5.0e3):
 
                 vsnk = self.coreTest(# High band requires stronger reception when centre_freq is greater 120 Mhz.
@@ -254,44 +275,51 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             peaks = np.array(peaks).T.tolist()
 
             # Print.
-            log.info("Absolute Areas")
+            log.debug("Absolute Areas")
             for ch, area in enumerate(areas):
-                log.info("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
+                log.debug("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
 
-            log.info("Channel Peaks")
+            log.debug("Channel Peaks")
             for ch, peak in enumerate(peaks):
-                log.info("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
+                log.debug("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
 
             # Verify areas are increasing (just check if list if sorted).
             for area in areas:
-                self.assertEqual(area, sorted(area))
+                try: self.assertEqual(area, sorted(area),
+                        "{:.0f} MHz central freqeuncy".format(centre_freq/1e6))
+                except AssertionError, e: self.failures.append(str(e))
 
             # Verify peaks are increasing (just check if list is sorted)
-            for peak in peaks:
-                self.assertEqual(peak, sorted(peak))
+            #for peak in peaks:
+            #    try: self.assertEqual(peak, sorted(peak))
+            #    except AssertionError, e: self.failures.append(str(e))
 
     def test_007_t(self):
         """Channel Repeatability"""
 
-        data = []
+        for centre_freq in np.arange(10e6, 4e9, 20e6):
 
-        # 10 runs and store the vsnk data
-        for x in xrange(10):
-            vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
-            runs = sigproc.to_mag(vsnk)
-            data.append(runs)
+            data = []
 
-        # Compare the channels to the first one. Make sure they are within +/-0.05
-        for run in xrange(1, len(data)):
-            for channel in xrange(len(data[0])):
-                self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05))
+            # 10 runs and store the vsnk data
+            for x in xrange(10):
+                vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
+                runs = sigproc.to_mag(vsnk)
+                data.append(runs)
+
+            # Compare the channels to the first one. Make sure they are within +/-0.05
+            for run in xrange(1, len(data)):
+                for channel in xrange(len(data[0])):
+                    try: self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05),
+                            "Ch {} at {:.0f} MHz central freqeuncy".format(channel, centre_freq/1e6))
+                    except AssertionError, e: self.failures.append(str(e))
 
     def test_008_t(self):
-        """Channel to Channel Consistency"""
+        """Channel Consistency"""
 
         for centre_freq in np.arange(15e6, 4e9, 100e6):
 
-            log.info("%.2f Hz" % centre_freq)
+            log.debug("%.2f Hz" % centre_freq)
 
             #3 iterations at each centre frequency
             for x in xrange(0,3):
@@ -302,7 +330,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
                 #Check that the channels are all similar to each other
                 for channel in xrange(1, len(vsnk)):
-                    self.assertTrue(np.allclose(vsnk[0], vsnk[channel], 0.05, 0.05))
+                    try: self.assertTrue(np.allclose(vsnk[0], vsnk[channel], 0.05, 0.05),
+                            "{:.0f} MHz Central Frequency".format(centre_freq/1e6))
+                    except AssertionError, e: self.failures.append(str(e))
 
 
 if __name__ == '__main__':
@@ -314,8 +344,11 @@ if __name__ == '__main__':
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_006_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_008_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 
-    gr_unittest.TextTestRunner(verbosity=2).run(crimson_test_suite)
+    print "Test results availible in test_results.log"
+
+    #gr_unittest.TextTestRunner(verbosity=2).run(crimson_test_suite)
+    gr_unittest.run(crimson_test_suite)
