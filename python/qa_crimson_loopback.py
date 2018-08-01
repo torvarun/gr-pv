@@ -252,7 +252,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             log.debug("%.2f Hz" % centre_freq)
 
             areas = []
-            peaks = []
 
             # For each centre frequency, sweep the TX Gain.
             for tx_amp in np.arange(5e3, 30e3, 5.0e3):
@@ -265,34 +264,22 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 #sigproc.dump(vsnk)
 
                 area = sigproc.absolute_area(vsnk)
-                peak = sigproc.channel_peaks(vsnk)
 
                 areas.append(area)
-                peaks.append(peak)
 
             # Transpose to defragment channel data.
             areas = np.array(areas).T.tolist()
-            peaks = np.array(peaks).T.tolist()
 
             # Print.
             log.debug("Absolute Areas")
             for ch, area in enumerate(areas):
                 log.debug("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
 
-            log.debug("Channel Peaks")
-            for ch, peak in enumerate(peaks):
-                log.debug("ch[%d]: %r" % (ch, np.around(peak, decimals = 4)))
-
             # Verify areas are increasing (just check if list if sorted).
             for area in areas:
                 try: self.assertEqual(area, sorted(area),
                         "{:.0f} MHz central freqeuncy".format(centre_freq/1e6))
                 except AssertionError, e: self.failures.append(str(e))
-
-            # Verify peaks are increasing (just check if list is sorted)
-            #for peak in peaks:
-            #    try: self.assertEqual(peak, sorted(peak))
-            #    except AssertionError, e: self.failures.append(str(e))
 
     def test_007_t(self):
         """Channel Repeatability"""
