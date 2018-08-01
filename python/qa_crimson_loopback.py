@@ -67,7 +67,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """
 
         # Flag to mock the vsnk or not
-        self._TO_MOCK = True
+        self._TO_MOCK = False
 
         self.channels = range(4)
 
@@ -75,7 +75,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         self.test_time = 5.0
 
         # Extra white space for test seperation.
-        print ""
+        print("")
 
         self.failures = [] # List of all the failures from a specific unittest
 
@@ -83,13 +83,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
 
     def tearDown(self):
-        # Log the status fo the test
+        # Log the status of the test
         if self.failures == []:
             log.info('{:25}'.format(self.shortDescription()) + " Pass")
         else:
             # Failure message with relevant info
-            log.info('{:25}'.format(self.shortDescription()) +  " Fail\n" + ' '*26 + str(self.failures))
-
+            log.info('{:25}'.format(self.shortDescription()) +  " Fail\n" + " "*26 + ("\n" + " "*26).join(self.failures))
 
     def coreTest(self, rx_gain, tx_amp, centre_freq):
         """
@@ -174,7 +173,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
             vsnk = crimson.sample()
 
-            return vsnk, None, None #Match tuple
+            return vsnk, None, None # Match tuple
     #-----------------------------------------------------------------------------------#
 
     #@unittest.skip("Skipping the debug check test")
@@ -301,6 +300,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Channel Repeatability"""
 
         for centre_freq in np.arange(10e6, 4e9, 20e6):
+            log.debug("%.2f Hz" % centre_freq)
 
             data = []
 
@@ -325,7 +325,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             log.debug("%.2f Hz" % centre_freq)
 
             #3 iterations at each centre frequency
-            for x in xrange(0,3):
+            for x in xrange(3):
                 vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
 
                 #Convert to magnitude
@@ -354,4 +354,4 @@ if __name__ == '__main__':
     print "Test results availible in test_results.log"
 
     #gr_unittest.TextTestRunner(verbosity=2).run(crimson_test_suite)
-    gr_unittest.run(crimson_test_suite)
+    gr_unittest.TestTestRunner().run(crimson_test_suite)
