@@ -197,27 +197,43 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_003_t(self):
         """Phase Coherency"""
 
-        # TODO Verify channel 0/1 phase diff against 2/3
-        # Current method assumes Ch 0 is golden
-
         for centre_freq in np.arange(15e6, 4e9, 100e6):
-
             log.debug("%.2f Hz" % centre_freq)
 
-            #3 iterations at each centre frequency
-            for x in xrange(0,3):
-                vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
+            runs = []
 
-                diffs = sigproc.phase_diff(vsnk)
+            # Run 3 iterations at each centre frequency
+            for x in xrange(3):
+                vsnk = self.coreTest(8.0, 4e9, centre_freq)[0]
+                runs.append(vsnk)
 
-                # Check that all the list values are within 10%
-                for diff in xrange(1, len(diffs)):
-                    #Calculate the percent difference relative to phase diff of channels A and B
-                    percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
+            for channel in xrange(len(runs[0])):
+                # Find phase shift of the channel between runs
+                # phase_diff = [diff(0,1), diff(0,2)]
+                phase_diff = sigproc.phase_diff([row[0] for row in runs])
+                log.debug(phase_diff)
 
-                    try: self.assertLessEqual(percent, 0.1,
-                            "Ch {} at {:.0f} MHz central frequency".format(diff, centre_freq/1e6))
-                    except AssertionError, e: self.failures.append(str(e))
+                self.assertLessEqual(phase_diff[0] + phase_diff[1], threshold * 2,
+                        "Channel {} out of phase at {:.0f}  MHz Centre Frequency".format(channel, centre_freq))
+
+        #for centre_freq in np.arange(15e6, 4e9, 100e6):
+
+        #    log.debug("%.2f Hz" % centre_freq)
+
+        #    #3 iterations at each centre frequency
+        #    for x in xrange(0,3):
+        #        vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
+
+        #        diffs = sigproc.phase_diff(vsnk)
+
+        #        # Check that all the list values are within 10%
+        #        for diff in xrange(1, len(diffs)):
+        #            #Calculate the percent difference relative to phase diff of channels A and B
+        #            percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
+
+        #            try: self.assertLessEqual(percent, 0.1,
+        #                    "Ch {} at {:.0f} MHz central frequency".format(diff, centre_freq/1e6))
+        #            except AssertionError, e: self.failures.append(str(e))
 
     def test_004_t(self):
         """Start of Burst"""
@@ -229,7 +245,9 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Set and Get"""
         # Does not work
 
-        #csnk = self.coreTest(10,5e3,15e6)[1]
+        centre_freq = np.random.randint(1, 1e9)
+
+        #csnk = self.coreTest(10, 5e3, centre_freq)[1]
 
         #for ch in self.channels:
         #    log.debug("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
@@ -245,7 +263,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_006_t(self):
         """Gain (LB + HB)"""
         # Checks using the areas of the waves and the peaks to verify (x2)
-
 
         for centre_freq in np.arange(10e6, 4e9, 20e6):
 
@@ -264,13 +281,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 #sigproc.dump(vsnk)
 
                 area = sigproc.absolute_area(vsnk)
-
                 areas.append(area)
 
             # Transpose to defragment channel data.
             areas = np.array(areas).T.tolist()
 
-            # Print.
+            # Log
             log.debug("Absolute Areas")
             for ch, area in enumerate(areas):
                 log.debug("ch[%d]: %r" % (ch, np.around(area, decimals = 4)))
@@ -331,7 +347,7 @@ if __name__ == '__main__':
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_008_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_003_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 

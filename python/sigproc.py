@@ -92,16 +92,16 @@ def absolute_area(vsnk):
 
     return areas
 
-def phase_diff(vsnk):
+def phase_diff(channel):
     """
-    Compute the phase differences between channel A and channel B,C,D using the phase angle formula.
-    NOTE: The phase differences of the channels are relative to Channel A.
+    Compute the phase differences between runs using the phase angle formula.
+    NOTE: The phase differences of the channels are relative to the first run.
     """
 
     phase_diffs = []
 
-    for channel in xrange(1, len(vsnk)):
-        phi = np.arccos(np.dot(vsnk[0].data(),vsnk[channel].data(),) / (np.linalg.norm(vsnk[0].data(),)*np.linalg.norm(vsnk[channel].data(),)))
+    for run in xrange(1, len(channel)):
+        phi = np.arccos(np.dot(channel[0].data(),channel[run].data(),) / (np.linalg.norm(channel[0].data(),)*np.linalg.norm(channel[run].data(),)))
 
         # Convert angle to proper domain
         if (phi > np.pi/2) and (phi < np.pi):
