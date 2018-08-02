@@ -101,13 +101,13 @@ def phase_diff(channel):
     phase_diffs = []
 
     for run in xrange(1, len(channel)):
-        phi = np.arccos(np.dot(channel[0].data(),channel[run].data(),) / (np.linalg.norm(channel[0].data(),)*np.linalg.norm(channel[run].data(),)))
+        phi = np.arcsin(np.dot(channel[0].data(),channel[run].data(),) / (np.linalg.norm(channel[0].data(),)*np.linalg.norm(channel[run].data(),)))
 
         # Convert angle to proper domain
-        if (phi > np.pi/2) and (phi < np.pi):
-            phi = np.pi - phi
-        elif (phi > np.pi) and (phi < 3 * np.pi / 2):
+        if (phi > np.pi) and (phi < np.pi * 3/2):
             phi -= np.pi
+        elif (phi > np.pi * 3/2) and (phi < np.pi * 2):
+            phi = 2 * np.pi - phi
 
         # Phase difference is complex so take the magnitude.
         phase_diffs.append(abs(phi))

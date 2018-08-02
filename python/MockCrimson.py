@@ -27,13 +27,13 @@ class MockCrimson(object):
     x(t) = A*sin(2.0*pi*f*t)
     """
 
-    def __init__(self, time=5, num_samples=64, sample_rate=2.00e6):
+    def __init__(self, num_channels=4, time=5, num_samples=64, sample_rate=2.00e6):
         self._amp = 1
         self._freq = 1/(2.0 * np.pi)
         self._time = time
         self._num_samples = num_samples
         self._sample_rate = sample_rate
-        self._num_channels = 4 #Crimson has 4 channels
+        self._num_channels = num_channels
 
     @property
     def amp(self):
@@ -80,6 +80,14 @@ class MockCrimson(object):
     def sample_rate(self, sample_rate):
         self._sample_rate = sample_rate
 
+    @property
+    def num_channels(self):
+        """Number of Channels"""
+        return self._num_channels
+
+    @num_channels.setter
+    def num_channels(self, num_channels):
+        self._num_channels = num_channels
 
     def __sine_real(self, t):
         """Equation of Wave: In-phase Component"""

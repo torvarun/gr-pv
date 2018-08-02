@@ -69,6 +69,8 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         # Flag to mock the vsnk or not
         self._TO_MOCK = False
 
+        # Start with 4 channels. When central frequency cross 40 MHz
+        # channels 3 and 4 must be disabled.
         self.channels = range(4)
 
         # In seconds.
@@ -79,7 +81,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
         self.failures = [] # List of all the failures from a specific unittest
 
-        log.debug('{:25}'.format(self.shortDescription()) + " Start")
+        log.info('{:25}'.format(self.shortDescription()) + " Start")
 
 
     def tearDown(self):
@@ -108,6 +110,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         +--------+    +--------+    | csnk | | csrc |    +---------+
                                     +------+ +------+
         """
+
+        # Is above 40 MHz, disable Channels C & D
+        if centre_freq > 40e6:
+            self.channels = range(2)
 
         tb = gr.top_block()
 
@@ -166,7 +172,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             return vsnk, csnk, csrc
 
         else:
-            crimson = MockCrimson(self.test_time, sc.num_samps, sample_rate)
+            crimson = MockCrimson(len(self.channels), self.test_time, sc.num_samps, sample_rate)
             #crimson.amp = tx_amp
             crimson.freq = centre_freq
             #print crimson.equation()
@@ -196,49 +202,31 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_003_t(self):
         """Phase Coherency"""
 
-        for centre_freq in np.arange(15e6, 4e9, 100e6):
+        for centre_freq in np.arange(15e6, 4e9, 25e5):
             log.debug("%.2f Hz" % centre_freq)
 
             runs = []
 
             # Run 3 iterations at each centre frequency
             for x in xrange(3):
-                vsnk = self.coreTest(8.0, 4e9, centre_freq)[0]
+                vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
+                #sigproc.dump(vsnk)
                 runs.append(vsnk)
 
             for channel in xrange(len(runs[0])):
                 # Find phase shift of the channel between runs
-                # phase_diff = [diff(0,1), diff(0,2)]
-                phase_diff = sigproc.phase_diff([row[0] for row in runs])
+                # Format: phase_diff = [diff(0,1), diff(0,2)]
+                phase_diff = sigproc.phase_diff([row[channel] for row in runs])
                 log.debug(phase_diff)
 
-                self.assertLessEqual(phase_diff[0] + phase_diff[1], threshold * 2,
+                try: self.assertLessEqual(phase_diff[0] + phase_diff[1], np.pi/90.0, # Check less than 2 deg total
                         "Channel {} out of phase at {:.0f}  MHz Centre Frequency".format(channel, centre_freq))
-
-        #for centre_freq in np.arange(15e6, 4e9, 100e6):
-
-        #    log.debug("%.2f Hz" % centre_freq)
-
-        #    #3 iterations at each centre frequency
-        #    for x in xrange(0,3):
-        #        vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
-
-        #        diffs = sigproc.phase_diff(vsnk)
-
-        #        # Check that all the list values are within 10%
-        #        for diff in xrange(1, len(diffs)):
-        #            #Calculate the percent difference relative to phase diff of channels A and B
-        #            percent = np.abs(diffs[0] - diffs[diff]) / diffs[0]
-
-        #            try: self.assertLessEqual(percent, 0.1,
-        #                    "Ch {} at {:.0f} MHz central frequency".format(diff, centre_freq/1e6))
-        #            except AssertionError, e: self.failures.append(str(e))
+                except AssertionError, e: self.failures.append(str(e))
 
     def test_004_t(self):
         """Start of Burst"""
 
-        try: self.assertTrue(0 == 1, "This should fail")
-        except AssertionError, e: self.failures.append(str(e))
+        pass
 
     def test_005_t(self):
         """Set and Get"""
@@ -337,6 +325,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                             "{:.0f} MHz Central Frequency".format(centre_freq/1e6))
                     except AssertionError, e: self.failures.append(str(e))
 
+    def test_009_t(self):
+        """Channel Independence"""
+
+        pass
 
 if __name__ == '__main__':
 
@@ -354,4 +346,4 @@ if __name__ == '__main__':
     print "Test results availible in test_results.log"
 
     #gr_unittest.TextTestRunner(verbosity=2).run(crimson_test_suite)
-    gr_unittest.TestTestRunner().run(crimson_test_suite)
+    gr_unittest.TextTestRunner().run(crimson_test_suite)
