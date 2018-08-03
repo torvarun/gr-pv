@@ -60,3 +60,6 @@ make test
 In total testing will take approximately 10 hours.
 
 Once all functional tests pass the RX/TX device is ready for use.
+
+**NOTE:**
+- Replace the generated /build/python/qa_crimson_loopback_test.sh with the one in the home directory.
