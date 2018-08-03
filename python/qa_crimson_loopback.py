@@ -35,6 +35,10 @@ import numpy as np
 
 from log import log
 
+import sys
+
+import argparse
+
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
     Hints:
@@ -182,7 +186,6 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             return vsnk, None, None # Match tuple
     #-----------------------------------------------------------------------------------#
 
-    #@unittest.skip("Skipping the debug check test")
     def test_000_t(self):
         """Quick Debug Test"""
 
@@ -207,8 +210,8 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
             runs = []
 
-            # Run 3 iterations at each centre frequency
-            for x in xrange(3):
+            # Run 5 iterations at each centre frequency
+            for x in xrange(5):
                 vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
                 #sigproc.dump(vsnk)
                 runs.append(vsnk)
@@ -219,7 +222,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 phase_diff = sigproc.phase_diff([row[channel] for row in runs])
                 log.debug(phase_diff)
 
-                try: self.assertLessEqual(phase_diff[0] + phase_diff[1], np.pi/90.0, # Check less than 2 deg total
+                try: self.assertLessEqual(phase_diff[0] + phase_diff[1], 4 * np.pi/180.0, # Check less than 4 deg total
                         "Channel {} out of phase at {:.0f}  MHz Centre Frequency".format(channel, centre_freq))
                 except AssertionError, e: self.failures.append(str(e))
 
@@ -232,18 +235,20 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Set and Get"""
         # Does not work
 
-        centre_freq = np.random.randint(1, 1e9)
+        # 10 iterations
+        #for x in range(10):
+        #    centre_freq = np.random.randint(1, 1e9)
 
-        #csnk = self.coreTest(10, 5e3, centre_freq)[1]
+        #    csnk = self.coreTest(10, 5e3, centre_freq)[1]
 
-        #for ch in self.channels:
-        #    log.debug("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
+        #    for ch in self.channels:
+        #        log.debug("Channel: %1d Gain: %.2f dB" % (ch, 1.0))
 
-        #    csnk.set_gain(1.0, ch) # Set the gain on the channel
-        #    log.debug("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
+        #        csnk.set_gain(1.0, ch) # Set the gain on the channel
+        #        log.debug("%.2f | %.2f" % (1.0, csnk.get_gain(ch)))
 
-        #    try: self.assertEqual(1.0, csnk.get_gain(ch))
-        #    except AssertionError, e: self.failures.append(str(e))
+        #        try: self.assertEqual(1.0, csnk.get_gain(ch))
+        #        except AssertionError, e: self.failures.append(str(e))
 
         pass
 
@@ -332,18 +337,18 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(description='Loopback Functional Test')
+    parser.add_argument("-d", "--dev", help="Run only the specified test", type=str)
+    args = parser.parse_args()
+
     crimson_test_suite  = gr_unittest.TestSuite()
 
-    # Flag for test development
-    IS_DEV = False
-
-    if IS_DEV:
-        # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_003_t'))
+    if args.dev:
+        # Run only the specified test in isolation
+        crimson_test_suite.addTest(qa_crimson_loopback(args.dev))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 
     print "Test results availible in test_results.log"
 
-    #gr_unittest.TextTestRunner(verbosity=2).run(crimson_test_suite)
     gr_unittest.TextTestRunner().run(crimson_test_suite)
