@@ -36,8 +36,9 @@ import numpy as np
 from log import log
 
 import sys
-
 import argparse
+
+from subprocess import Popen, PIPE
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -190,7 +191,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         """Quick Debug Test"""
 
         vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
-        #sigproc.dump(vsnk)
+        sigproc.dump(vsnk)
 
     def test_001_t(self):
         """Trigger"""
@@ -229,7 +230,17 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_004_t(self):
         """Start of Burst"""
 
-        pass
+        # NOTE: This test cannot be mocked.
+
+        cmd = "./build/python/qa_crimson_burst_dummy.sh"
+        p = Popen(cmd, stderr=PIPE)
+        stderr = p.communicate()[1]
+        #print(stderr)
+
+        # Should fail only on the last iteration of the loop
+        try: self.assertEqual(stderr.count("rx error code: 15"), 1,
+                "Crimson does not have the expected amount of empties/overs.")
+        except AssertionError, e: self.failures.append(str(e))
 
     def test_005_t(self):
         """Set and Get"""
