@@ -54,6 +54,12 @@ cd build
 
 cmake ..
 
+cp ../qa_crimson_burst_dummy.sh /python/
+
+rm /python/qa_crimson_loopback_test.sh
+
+cp ../qa_crimson_loopback_test.sh /python/
+
 make test
 ```
 
