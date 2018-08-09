@@ -34,6 +34,7 @@ from MockCrimson import MockCrimson
 import numpy as np
 
 from log import log
+from subprocess import Popen, PIPE
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -196,6 +197,17 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     def test_002_t(self):
         """Flow Control"""
+        # NOTE: This test cannot be mocked.
+
+        cmd = "./python/crimson_test_underflow"
+        p = Popen(cmd, stdout=PIPE)
+        stdout = p.communicate()[0]
+        log.debug(stdout)
+
+        # Should fail only on the last iteration of the loop
+        try: self.assertEqual(stdout.count("1 successes"), 1,
+                "TX underflows could not be requested async")
+        except AssertionError, e: self.failures.append(str(e))
 
         pass
 
@@ -335,11 +347,11 @@ if __name__ == '__main__':
     crimson_test_suite  = gr_unittest.TestSuite()
 
     # Flag for test development
-    IS_DEV = False
+    IS_DEV = True
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_003_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_002_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 
