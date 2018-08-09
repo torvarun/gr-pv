@@ -347,7 +347,7 @@ if __name__ == '__main__':
     crimson_test_suite  = gr_unittest.TestSuite()
 
     # Flag for test development
-    IS_DEV = True
+    IS_DEV = False
 
     if IS_DEV:
         # Runs only the specified test in isolation
