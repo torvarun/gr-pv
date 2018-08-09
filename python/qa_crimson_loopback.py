@@ -27,6 +27,8 @@ from gnuradio import uhd
 
 from crimson_source_c import crimson_source_c
 from crimson_sink_s import crimson_sink_s
+from crimson_tx_streamer import crimson_tx_streamer
+from crimson_rx_streamer import crimson_rx_streamer
 
 import time
 import sigproc
@@ -190,6 +192,10 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_000_t(self):
         """Quick Debug Test"""
 
+        #msg = gr.msg_queue(0)
+        #msg.insert_tail(gr.message())
+        #amsg = uhd.amsg_source("crimson", msg)
+
         vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
         sigproc.dump(vsnk)
 
@@ -201,12 +207,22 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_002_t(self):
         """Flow Control"""
 
-        pass
+        # NOTE: This test cannot be mocked.
+
+        cmd = "./python/test_messages"
+        p = Popen(cmd, stdout=PIPE)
+        stdout = p.communicate()[0]
+        log.debug(stdout)
+
+        # Should fail only on the last iteration of the loop
+        try: self.assertEqual(stdout.count("1 successes"), 1,
+                "TX underflows could not be requested async")
+        except AssertionError, e: self.failures.append(str(e))
 
     def test_003_t(self):
         """Phase Coherency"""
 
-        for centre_freq in np.arange(15e6, 4e9, 25e5):
+        for centre_freq in np.arange(15e6, 4e9, 500e5):
             log.debug("%.2f Hz" % centre_freq)
 
             runs = []
@@ -235,7 +251,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         cmd = "./build/python/qa_crimson_burst_dummy.sh"
         p = Popen(cmd, stderr=PIPE)
         stderr = p.communicate()[1]
-        #print(stderr)
+        log.debug(stderr)
 
         # Should fail only on the last iteration of the loop
         try: self.assertEqual(stderr.count("rx error code: 15"), 1,
@@ -244,7 +260,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
     def test_005_t(self):
         """Set and Get"""
-        # Does not work
+        # Does not work((4e9-15e6)/25e5)*25
 
         # 10 iterations
         #for x in range(10):

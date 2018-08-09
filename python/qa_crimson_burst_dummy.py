@@ -30,8 +30,6 @@ from crimson_sink_s import crimson_sink_s
 
 import time
 
-from log import log
-
 from numpy import arange
 
 class qa_crimson_flow(gr_unittest.TestCase):
@@ -130,7 +128,6 @@ class qa_crimson_flow(gr_unittest.TestCase):
     def test_flow(self):
         # Should only fail on the last iteration of the loop
         for sample_rate in arange(20e6, 260e6, 40e6):
-            log.debug("%d MSps" % sample_rate)
             self.coreTest(8.0, 3.0e4, 15e6, sample_rate)
 
 if __name__ == '__main__':
