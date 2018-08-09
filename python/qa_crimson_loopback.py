@@ -209,7 +209,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
         # NOTE: This test cannot be mocked.
 
-        cmd = "./python/test_messages"
+        cmd = "./python/crimson_test_underflow"
         p = Popen(cmd, stdout=PIPE)
         stdout = p.communicate()[0]
         log.debug(stdout)

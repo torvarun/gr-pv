@@ -1,6 +1,7 @@
 build/
 *.pyc
 octave_scripts/
-*.log
 
+*.log
+output.txt
 cleanup.sh
