@@ -35,6 +35,7 @@ import numpy as np
 
 from log import log
 from subprocess import Popen, PIPE
+from threading import Timer
 
 class qa_crimson_loopback(gr_unittest.TestCase):
     """
@@ -196,18 +197,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         pass
 
     def test_002_t(self):
-        """Flow Control"""
-        # NOTE: This test cannot be mocked.
-
-        cmd = "./python/crimson_test_underflow"
-        p = Popen(cmd, stdout=PIPE)
-        stdout = p.communicate()[0]
-        log.debug(stdout)
-
-        # Should fail only on the last iteration of the loop
-        try: self.assertEqual(stdout.count("1 successes"), 1,
-                "TX underflows could not be requested async")
-        except AssertionError, e: self.failures.append(str(e))
+        """Channel Independence"""
 
         pass
 
@@ -238,7 +228,15 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_004_t(self):
         """Start of Burst"""
 
-        pass
+        cmd = "./build/python/qa_crimson_burst_dummy.sh"
+        p = Popen(cmd, stderr = PIPE)
+        stderr = p.communicate()[1]
+        log.debug(stderr)
+
+        # Should only fail on the last iteration of the loop
+        try: self.assertEqual(stderr.count("rx error code: 15"), 1,
+                "Crimson does not have the expected amount of empties/overs.")
+        except AssertionError, e: self.failures.append(str(e))
 
     def test_005_t(self):
         """Set and Get"""
@@ -338,9 +336,32 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                     except AssertionError, e: self.failures.append(str(e))
 
     def test_009_t(self):
-        """Channel Independence"""
+        """Flow Control"""
 
-        pass
+        # NOTE: This test cannot be mocked.
+
+        cmd = "./python/crimson_test_underflow"
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+
+        def endProcess():
+            p.kill()
+            try: self.assertTrue(False, "Underflow Check Timed Out")
+            except AssertionError, e: self.failures.append(str(e))
+
+        timer = Timer(20, endProcess) # 20 seconds timeout
+
+        try:
+            timer.start()
+
+            stdout = p.communicate()[0]
+            log.debug(stdout)
+
+            # Should fail only on the last iteration of the loop
+            try: self.assertEqual(stdout.count("Got event code underflow message."), 1,
+                    "TX underflows could not be requested async")
+            except AssertionError, e: self.failures.append(str(e))
+        finally:
+            timer.cancel()
 
 if __name__ == '__main__':
 
@@ -351,7 +372,8 @@ if __name__ == '__main__':
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        crimson_test_suite.addTest(qa_crimson_loopback('test_002_t'))
+        #crimson_test_suite.addTest(qa_crimson_loopback('test_004_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_009_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 
