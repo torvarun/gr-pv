@@ -204,7 +204,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
     def test_003_t(self):
         """Phase Coherency"""
 
-        for centre_freq in np.arange(15e6, 4e9, 25e5):
+        for centre_freq in np.arange(15e6, 4e9, 25e6):
             log.debug("%.2f Hz" % centre_freq)
 
             runs = []
@@ -213,6 +213,7 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             for x in xrange(3):
                 vsnk = self.coreTest(8.0, 3.0e4, centre_freq)[0]
                 #sigproc.dump(vsnk)
+
                 runs.append(vsnk)
 
             for channel in xrange(len(runs[0])):
@@ -221,9 +222,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
                 phase_diff = sigproc.phase_diff([row[channel] for row in runs])
                 log.debug(phase_diff)
 
-                try: self.assertLessEqual(phase_diff[0] + phase_diff[1], np.pi/90.0, # Check less than 2 deg total
+                try:
+                    self.assertLessEqual(phase_diff[0] + phase_diff[1], np.pi/90.0, # Check less than 2 deg total
                         "Channel {} out of phase at {:.0f}  MHz Centre Frequency".format(channel, centre_freq))
-                except AssertionError, e: self.failures.append(str(e))
+                except AssertionError, e:
+                    self.failures.append(str(e))
+                    pass
 
     def test_004_t(self):
         """Start of Burst"""
@@ -234,9 +238,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
         log.debug(stderr)
 
         # Should only fail on the last iteration of the loop
-        try: self.assertEqual(stderr.count("rx error code: 15"), 1,
+        try:
+            self.assertEqual(stderr.count("rx error code: 15"), 1,
                 "Crimson does not have the expected amount of empties/overs.")
-        except AssertionError, e: self.failures.append(str(e))
+        except AssertionError, e:
+            self.failures.append(str(e))
+            pass
 
     def test_005_t(self):
         """Set and Get"""
@@ -290,14 +297,17 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
             # Verify areas are increasing (just check if list if sorted).
             for area in areas:
-                try: self.assertEqual(area, sorted(area),
+                try:
+                    self.assertEqual(area, sorted(area),
                         "{:.0f} MHz central freqeuncy".format(centre_freq/1e6))
-                except AssertionError, e: self.failures.append(str(e))
+                except AssertionError, e:
+                    self.failures.append(str(e))
+                    pass
 
     def test_007_t(self):
         """Channel Repeatability"""
 
-        for centre_freq in np.arange(10e6, 4e9, 20e6):
+        for centre_freq in np.arange(10e6, 4e9, 20e7):
             log.debug("%.2f Hz" % centre_freq)
 
             data = []
@@ -305,15 +315,18 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             # 10 runs and store the vsnk data
             for x in xrange(10):
                 vsnk = self.coreTest(8.0, 3.0e4, 15e6)[0]
-                runs = sigproc.to_mag(vsnk)
+                runs = sigproc.to_mag(vsnk) # Convert to real number
                 data.append(runs)
 
             # Compare the channels to the first one. Make sure they are within +/-0.05
             for run in xrange(1, len(data)):
                 for channel in xrange(len(data[0])):
-                    try: self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05),
+                    try:
+                        self.assertTrue(np.allclose(data[0][channel], data[run][channel], 0.05, 0.05),
                             "Ch {} at {:.0f} MHz central freqeuncy".format(channel, centre_freq/1e6))
-                    except AssertionError, e: self.failures.append(str(e))
+                    except AssertionError, e:
+                        self.failures.append(str(e))
+                        pass
 
     def test_008_t(self):
         """Channel Consistency"""
@@ -331,9 +344,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
                 #Check that the channels are all similar to each other
                 for channel in xrange(1, len(vsnk)):
-                    try: self.assertTrue(np.allclose(vsnk[0], vsnk[channel], 0.05, 0.05),
+                    try:
+                        self.assertTrue(np.allclose(vsnk[0], vsnk[channel], 0.05, 0.05),
                             "{:.0f} MHz Central Frequency".format(centre_freq/1e6))
-                    except AssertionError, e: self.failures.append(str(e))
+                    except AssertionError, e:
+                        self.failures.append(str(e))
+                        pass
 
     def test_009_t(self):
         """Flow Control"""
@@ -345,10 +361,16 @@ class qa_crimson_loopback(gr_unittest.TestCase):
 
         def endProcess():
             p.kill()
-            try: self.assertTrue(False, "Underflow Check Timed Out")
-            except AssertionError, e: self.failures.append(str(e))
 
-        timer = Timer(20, endProcess) # 20 seconds timeout
+            try:
+                self.assertTrue(False, "Underflow Check Timed Out")
+            except AssertionError, e:
+                self.failures.append(str(e))
+                pass
+
+        # Use a timer for timeout functionality
+        # 20 second timeout
+        timer = Timer(20, endProcess)
 
         try:
             timer.start()
@@ -357,9 +379,12 @@ class qa_crimson_loopback(gr_unittest.TestCase):
             log.debug(stdout)
 
             # Should fail only on the last iteration of the loop
-            try: self.assertEqual(stdout.count("Got event code underflow message."), 1,
+            try:
+                self.assertEqual(stdout.count("Got event code underflow message."), 1,
                     "TX underflows could not be requested async")
-            except AssertionError, e: self.failures.append(str(e))
+            except AssertionError, e:
+                self.failures.append(str(e))
+                pass
         finally:
             timer.cancel()
 
