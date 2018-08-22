@@ -4,3 +4,5 @@ octave_scripts/
 *.log
 output.txt
 cleanup.sh
+loopback.sh
+2018*

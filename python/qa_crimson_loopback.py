@@ -397,8 +397,7 @@ if __name__ == '__main__':
 
     if IS_DEV:
         # Runs only the specified test in isolation
-        #crimson_test_suite.addTest(qa_crimson_loopback('test_004_t'))
-        crimson_test_suite.addTest(qa_crimson_loopback('test_009_t'))
+        crimson_test_suite.addTest(qa_crimson_loopback('test_000_t'))
     else:
         crimson_test_suite  = gr_unittest.TestLoader().loadTestsFromTestCase(qa_crimson_loopback)
 

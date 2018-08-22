@@ -47,7 +47,7 @@ class qa_crimson_flow(gr_unittest.TestCase):
         """
 
         self.channels = range(4)
-        self.test_time = 5.0
+        self.test_time = 10.0
 
     def coreTest(self, rx_gain, tx_amp, centre_freq, sample_rate=20e6):
         """
