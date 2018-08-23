@@ -24,7 +24,7 @@ log.addHandler(results_handler)
 
 # Console output
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
+console_handler.setLevel(logging.INFO)
 
 console_formatter = logging.Formatter("%(message)s")
 console_handler.setFormatter(console_formatter)
