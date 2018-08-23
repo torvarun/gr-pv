@@ -54,7 +54,7 @@ cd build
 
 cmake ..
 
-cp ../qa_crimson_burst_dummy.py python/
+mv ../qa_crimson_burst_dummy.py python/
 
 make test
 ```
